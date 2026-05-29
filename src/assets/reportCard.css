@@ -1,0 +1,48 @@
+.report-card {
+    background: #1a1a1a;
+    border: 1px solid #d4af37;
+    border-top: 4px solid #d4af37; 
+    padding: 25px;
+    width: 85%;
+    border-radius: 8px;
+    text-align: center;
+    position: relative;
+    transition: 0.3s;
+}
+
+.report-card:hover { transform: translateY(-5px); }
+
+.report-icon { font-size: 3rem; margin-bottom: 10px; }
+
+.btn-download {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 8px 15px;
+    background: #d4af37;
+    color: #1a1a1a;
+    text-decoration: none;
+    font-weight: bold;
+    border-radius: 4px;
+    font-size: 0.8rem;
+}
+
+.btn-download:hover { background: #fff; }
+
+.report-card:hover .card-actions {
+    opacity: 1;
+}
+
+.report-card .btn-delete {
+    background: rgba(255, 68, 68, 0.2);
+    border: 1px solid #ff4444;
+    color: #ff4444;
+    padding: 5px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.report-card .btn-delete:hover {
+    background: #ff4444;
+    color: white;
+}

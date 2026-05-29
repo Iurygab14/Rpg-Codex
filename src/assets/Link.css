@@ -1,0 +1,10 @@
+a {
+  color: #d4af37;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+a:hover {
+  filter: brightness(1.2);
+  text-shadow: 0 0 5px #d4af37;
+}

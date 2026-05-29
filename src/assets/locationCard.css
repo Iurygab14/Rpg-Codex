@@ -1,0 +1,87 @@
+.locations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(450px, 1fr)); 
+  gap: 25px;
+  width: 100%;
+  padding: 20px 40px;
+  box-sizing: border-box; 
+  justify-content: start;
+}
+
+.card-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 5px;
+  z-index: 10;
+  opacity: 0; 
+  transition: opacity 0.3s ease;
+}
+
+.location-card:hover .card-actions {
+  opacity: 1;
+}
+
+.location-card {
+  width: 100%;
+  max-width: 800px;    
+  height: 400px;       
+  display: flex;
+  background-color: #1a1a1a;
+  border: 1px solid #d4af37;
+  border-left: 5px solid #d4af37;
+  border-radius: 8px;
+  transition: transform 0.2s;
+  position: relative;   
+  overflow: hidden;
+}
+
+.location-card:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+}
+
+.loc-image {
+  width: 40%;          
+  object-fit: cover; 
+  border-right: 1px solid #d4af37;
+}
+
+.loc-info {
+  width: 60%;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.loc-details h3 {
+  margin: 0 0 1rem 0;
+  color: #d4af37;
+  text-transform: uppercase;
+  font-family: 'Cinzel', serif;
+  font-size: 1.4rem;
+}
+
+.loc-details p {
+  margin: 0 0 0.8rem 0;
+  color: #eee;
+  font-size: 0.95rem;
+}
+
+.loc-details p strong {
+  color: #d4af37;
+  text-transform: none; 
+}
+
+.loc-description {
+  font-size: 0.85rem;
+  color: #a0a0a0;
+  font-style: italic;
+  line-height: 1.5;
+  margin-top: 0.5rem;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
