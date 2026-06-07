@@ -3,6 +3,7 @@ import { db } from "../firebaseConfig.js";
 import { collection, onSnapshot, addDoc, doc, updateDoc } from "firebase/firestore";
 import CharacterCard from "../components/characterCard.jsx";
 import "../assets/characters.css"
+import { uploadImage } from "../services/cloudinary";
 
 function Characters() {
   const [lista, setLista] = useState([]);
@@ -16,6 +17,7 @@ function Characters() {
   const [buscaClasse, setBuscaClasse] = useState("");
   const [buscaStatus, setBuscaStatus] = useState("");
   const [buscaTipo, setBuscaTipo] = useState("");
+  const [imagemArquivo, setImagemArquivo] = useState(null);
 
   const [novoChar, setNovoChar] = useState({
     nome: "", imagem: "", tipo: "NPCs",
@@ -53,13 +55,23 @@ function Characters() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const dadosParaSalvar = { ...novoChar };
+    let imageUrl = novoChar.imagem;
+
+    if (imagemArquivo) {
+      imageUrl = await uploadImage(imagemArquivo);
+    }
+
+    const dadosParaSalvar = {
+      ...novoChar,
+      imagem: imageUrl,
+    };
+
     delete dadosParaSalvar.id;
 
     if (isEditing) {
-      await updateDoc(doc(db, "players", currentId), dadosParaSalvar); 
+      await updateDoc(doc(db, "players", currentId), dadosParaSalvar);
     } else {
-      await addDoc(collection(db, "players"), dadosParaSalvar); 
+      await addDoc(collection(db, "players"), dadosParaSalvar);
     }
     fecharModal();
   };
@@ -113,7 +125,7 @@ function Characters() {
               <input placeholder="Nome" value={novoChar.nome} onChange={(e) => setNovoChar({...novoChar, nome: e.target.value})} required />
               <input placeholder="Raça" value={novoChar.raca} onChange={(e) => setNovoChar({...novoChar, raca: e.target.value})} required />
 
-              <input placeholder="URL da Imagem" value={novoChar.imagem} onChange={(e) => setNovoChar({...novoChar, imagem: e.target.value})} required />
+              <input type="file" accept="image/*" onChange={(e) => setImagemArquivo(e.target.files[0])}/>
               
               {novoChar.tipo === "Principais" ? (
                 <>

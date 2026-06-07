@@ -28,9 +28,16 @@ function ReportCard({ report }) {
             <div className="report-info">
                 <h4>{report.nome}</h4>
                 <p>Data: {report.data.split('-').reverse().join('/')}</p>
-                <a href={report.pdfUrl} target="_blank" rel="noreferrer" className="btn-download">
-                    📥 Baixar Relatório
-                </a>
+                {report.pdfUrl && (
+                    <a
+                        href={report.pdfUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="btn-download"
+                    >
+                        📥 Baixar Relatório
+                    </a>
+                    )}
             </div>
         </div>
     );

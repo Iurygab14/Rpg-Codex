@@ -3,6 +3,7 @@ import { db } from "../firebaseConfig.js";
 import { collection, onSnapshot, addDoc, doc, updateDoc } from "firebase/firestore";
 import LocationCard from "../components/locationCard.jsx";
 import "../assets/locations.css";
+import { uploadImage } from "../services/cloudinary";
 
 function Locations() {
     const [lista, setLista] = useState([]);
@@ -11,6 +12,7 @@ function Locations() {
     const [currentId, setCurrentId] = useState(null);
     const [buscaNome, setBuscaNome] = useState("");
     const [buscaLocalizacao, setBuscaLocalizacao] = useState("");
+    const [imagemArquivo, setImagemArquivo] = useState(null);
     const [novoLocal, setNovoLocal] = useState({
         nome: "", 
         imagem: "",
@@ -42,14 +44,26 @@ function Locations() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const dadosParaSalvar = { ...novoLocal };
+
+        let imageUrl = novoLocal.imagem;
+
+        if (imagemArquivo) {
+            imageUrl = await uploadImage(imagemArquivo);
+        }
+
+        const dadosParaSalvar = {
+            ...novoLocal,
+            imagem: imageUrl,
+        };
+
         delete dadosParaSalvar.id;
 
         if (isEditing) {
-            await updateDoc(doc(db, "locations", currentId), dadosParaSalvar); 
+            await updateDoc(doc(db, "locations", currentId), dadosParaSalvar);
         } else {
-            await addDoc(collection(db, "locations"), dadosParaSalvar); 
+            await addDoc(collection(db, "locations"), dadosParaSalvar);
         }
+
         fecharModal();
     };
     
@@ -96,7 +110,7 @@ function Locations() {
 
                         <form onSubmit={handleSubmit}>
                             <input placeholder="Nome" value={novoLocal.nome} onChange={(e) => setNovoLocal({...novoLocal, nome: e.target.value})} required />
-                            <input placeholder="URL da Imagem" value={novoLocal.imagem} onChange={(e) => setNovoLocal({...novoLocal, imagem: e.target.value})} required />
+                            <input type="file"  accept="image/*"  onChange={(e) => setImagemArquivo(e.target.files[0])}/>
                             <input placeholder="Localização" value={novoLocal.localizacao} onChange={(e) => setNovoLocal({...novoLocal, localizacao: e.target.value})} required />
                             <input placeholder="Descrição" value={novoLocal.descricao} onChange={(e) => setNovoLocal({...novoLocal, descricao: e.target.value})} required />
 

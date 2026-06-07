@@ -3,6 +3,7 @@ import { db } from "../firebaseConfig.js";
 import { collection, onSnapshot, addDoc, doc, deleteDoc } from "firebase/firestore";
 import ReportCard from "../components/reportCard";
 import "../assets/reports.css";
+import { uploadPdf } from "../services/cloudinary";
 
 function Reports() {
     const [lista, setLista] = useState([]);
@@ -10,6 +11,7 @@ function Reports() {
     const [novoRelatorio, setNovoRelatorio] = useState({ nome: "", data: "", pdfUrl: "" });
     const [buscaNome, setBuscaNome] = useState("");
     const [buscaData, setBuscaData] = useState("");
+    const [pdfArquivo, setPdfArquivo] = useState(null);
 
     useEffect(() => {
         const unsub = onSnapshot(collection(db, "reports"), (snapshot) => {
@@ -21,9 +23,27 @@ function Reports() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        await addDoc(collection(db, "reports"), novoRelatorio);
+
+        let pdfUrl = "";
+
+        if (pdfArquivo) {
+            pdfUrl = await uploadPdf(pdfArquivo);
+        }
+
+        await addDoc(collection(db, "reports"), {
+            ...novoRelatorio,
+            pdfUrl,
+        });
+
         setShowModal(false);
-        setNovoRelatorio({ nome: "", data: "", pdfUrl: "" });
+
+        setNovoRelatorio({
+            nome: "",
+            data: "",
+            pdfUrl: "",
+        });
+
+        setPdfArquivo(null);
     };
 
     return (
@@ -73,7 +93,7 @@ function Reports() {
                         <form onSubmit={handleSubmit}>
                             <input placeholder="Nome da Missão" value={novoRelatorio.nome} onChange={(e) => setNovoRelatorio({...novoRelatorio, nome: e.target.value})} required />
                             <input type="date" value={novoRelatorio.data} onChange={(e) => setNovoRelatorio({...novoRelatorio, data: e.target.value})} required />
-                            <input placeholder="Link do PDF (URL)" value={novoRelatorio.pdfUrl} onChange={(e) => setNovoRelatorio({...novoRelatorio, pdfUrl: e.target.value})} required />
+                            <input type="file"  accept=".pdf,application/pdf"  onChange={(e) => setPdfArquivo(e.target.files[0])} required/>
                             <button type="submit" className="btn-save">Entregar Relatório</button>
                         </form>
                     </div>
