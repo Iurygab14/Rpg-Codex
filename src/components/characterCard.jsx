@@ -56,7 +56,6 @@ function CharacterCard({ player, onEdit }) {
             <div className="combat-stats">
               <p className="stat-hp">❤️ HP: {player.hp}</p>
               <p>🛡️ AC: {player.ac}</p>
-              <p>⚡ Ini: {player.iniciativa}</p>
               <p className={`status-${player.status?.toLowerCase() || 'vivo'}`}>
                 ● {player.status || "Vivo"}
               </p>

@@ -4,6 +4,7 @@ import { collection, onSnapshot, addDoc, doc, updateDoc } from "firebase/firesto
 import CharacterCard from "../components/characterCard.jsx";
 import "../assets/characters.css"
 import { uploadImage } from "../services/cloudinary";
+import { serverTimestamp } from "firebase/firestore";
 
 function Characters() {
   const [lista, setLista] = useState([]);
@@ -55,6 +56,7 @@ function Characters() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     let imageUrl = novoChar.imagem;
 
     if (imagemArquivo) {
@@ -69,10 +71,17 @@ function Characters() {
     delete dadosParaSalvar.id;
 
     if (isEditing) {
-      await updateDoc(doc(db, "players", currentId), dadosParaSalvar);
+      await updateDoc(
+        doc(db, "players", currentId),
+        dadosParaSalvar
+      );
     } else {
-      await addDoc(collection(db, "players"), dadosParaSalvar);
+      await addDoc(collection(db, "players"), {
+        ...dadosParaSalvar,
+        criadoEm: serverTimestamp(),
+      });
     }
+
     fecharModal();
   };
 
