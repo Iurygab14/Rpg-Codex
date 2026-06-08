@@ -1,14 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { db } from "../firebaseConfig";
-import {
-  addDoc,
-  collection,
-  deleteDoc,
-  deleteField,
-  doc,
-  onSnapshot,
-  updateDoc,
-} from "firebase/firestore";
+import {addDoc, collection, deleteDoc, deleteField, doc, onSnapshot, updateDoc,} from "firebase/firestore";
 import "../assets/worldMap.css";
 
 function WorldMap() {
