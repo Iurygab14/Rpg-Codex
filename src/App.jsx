@@ -11,7 +11,7 @@ function App() {
     <div>
       <Navbar/>
 
-      <main style={{ width: "100%", padding: "0px 20px 20px 20px" }}>
+      <main style={{ padding: "0px 20px 20px 20px", margin: "0 auto"}}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/characters" element={<Characters />} />

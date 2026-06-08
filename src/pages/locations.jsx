@@ -4,6 +4,7 @@ import { collection, onSnapshot, addDoc, doc, updateDoc } from "firebase/firesto
 import LocationCard from "../components/locationCard.jsx";
 import "../assets/locations.css";
 import { uploadImage } from "../services/cloudinary";
+import { serverTimestamp } from "firebase/firestore";
 
 function Locations() {
     const [lista, setLista] = useState([]);
@@ -61,7 +62,10 @@ function Locations() {
         if (isEditing) {
             await updateDoc(doc(db, "locations", currentId), dadosParaSalvar);
         } else {
-            await addDoc(collection(db, "locations"), dadosParaSalvar);
+            await addDoc(collection(db, "locations"), {
+            ...dadosParaSalvar,
+            criadoEm: serverTimestamp(),
+            });
         }
 
         fecharModal();
