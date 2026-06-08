@@ -4,21 +4,20 @@
   height: 330px;     
   display: flex;
   background-color: #1a1a1a;
-  border: 1px solid #d4af37;
-  border-left: 5px solid #d4af37;
+  border: 1px solid black;
   border-radius: 8px;
   transition: transform 0.2s;
 }
 
 .character-card:hover {
-  transform: scale(1.02);
-  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+  transform: translateY(-5px);
+  border-color: #d4af37;
+  box-shadow: 0 0 15px rgba(212,175,55,0.15);
 }
 
 .char-image {
   width: 30%; 
   object-fit: cover; 
-  border-right: 1px solid #d4af37;
   object-position: top; 
 }
 
@@ -26,7 +25,6 @@
   width: 70%;
   padding: 1.5rem 1rem 0rem 1rem; 
   box-sizing: border-box; 
-  border: 1px solid yellow;
   text-transform: capitalize;
   justify-content: space-between;
   display: flex;

@@ -94,7 +94,7 @@ function Home() {
 
     const ultimosRelatorios = [...reports]
         .sort((a, b) => b.data.localeCompare(a.data))
-        .slice(0, 3);
+        .slice(0, 5);
 
     const ultimasCriaturas = [...bestiary]
         .filter(criatura => criatura.criadoEm)

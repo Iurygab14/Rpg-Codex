@@ -1,26 +1,40 @@
-nav {
-  display: flex;
-  gap: 2rem;
-  padding: 1.2rem 2rem;
-  background-color: #1a1a1a;
-  border-bottom: 2px solid #d4af37;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+.app-navbar {
   width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: rgba(6, 6, 12, 0.94);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.14);
+  backdrop-filter: blur(12px);
   position: sticky;
   top: 0;
   z-index: 1000;
-  box-sizing: border-box; 
 }
 
-nav a {
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  transition: all 0.3s ease;
-  font-size: 0.9rem;
+.nav-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem;
 }
 
-nav a:hover {
-  text-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
-  transform: translateY(-2px);
-  opacity: 0.8;
+.nav-link {
+  color: #eee;
+  text-decoration: none;
+  font-size: 0.95rem;
+  padding: 0.65rem 0.95rem;
+  border-radius: 999px;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.nav-link:hover {
+  background: rgba(212, 175, 55, 0.14);
+  color: #fff;
+}
+
+.nav-link.active {
+  background: rgba(212, 175, 55, 0.22);
+  color: #fff;
+  box-shadow: 0 0 18px rgba(212, 175, 55, 0.18);
 }

@@ -1,92 +1,73 @@
+.page-container {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  width: 100%;
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: 0 24px 24px;
+}
+
 .header-actions-best {
   width: 100%;
-  margin-bottom: 30px;
-  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
 }
 
 .action-bar {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
 }
 
 .search-container-best {
-  background: rgba(20, 20, 20, 0.8);
-  border: 1px solid #d4af37;
-  border-radius: 8px;
-  padding: 15px;
-  width: 40%;
-  max-width: 1200px;
+  width: 100%;
+  max-width: 100%;
+  background: rgba(0, 0, 0, 0.24);
+  border: 1px solid rgba(212, 175, 55, 0.14);
+  border-radius: 22px;
+  padding: 24px;
 }
 
 .filter-header-best {
-  color: #d4af37;
-  font-size: 0.8rem;
-  font-weight: bold;
-  letter-spacing: 1px;
+  color: var(--accent);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
   margin-bottom: 15px;
   text-transform: uppercase;
 }
 
 .filter-inputs-best {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 18px;
 }
 
 .filter-inputs-best label {
   display: flex;
   flex-direction: column;
-  color: #888;
-  font-size: 0.75rem;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
   text-transform: uppercase;
-  flex: 1;
-  min-width: 160px;
 }
 
 .search-input-best {
-  background: #1a1a1a;
-  border: 1px solid #444;
-  border-radius: 4px;
-  color: #eee;
-  padding: 8px 12px;
-  margin-top: 5px;
-  font-size: 0.9rem;
-  outline: none;
-  transition: border-color 0.3s ease;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  border-radius: 14px;
+  padding: 12px 14px;
 }
 
-.search-input-best:focus {
-  border-color: #d4af37;
-}
-
-select.search-best {
-  cursor: pointer;
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23d4af37' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 10px center;
-  background-size: 12px;
-  padding-right: 30px;
-}
-
-.btn-add-main {
-  background: transparent;
-  border: 1px solid #d4af37;
-  color: #fff;
-  padding: 10px 20px;
-  border-radius: 4px;
-  font-weight: bold;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  background-color: rgba(212, 175, 55, 0.1);
-}
-
-.btn-add-main:hover {
-  background-color: #d4af37;
-  color: #000;
-  box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+.bestiary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+  width: 100%;
 }
 

@@ -156,6 +156,7 @@ function Characters() {
                       <option value="NPCs">NPC</option>
                     </select>
                   </div>
+                  <textarea placeholder="Descrição/Notas" value={novoChar.descricao} onChange={(e) => setNovoChar({...novoChar, descricao: e.target.value})} required />
                 </>
               ) : (
                 <>

@@ -1,7 +1,6 @@
 .report-card {
     background: #1a1a1a;
-    border: 1px solid #d4af37;
-    border-top: 4px solid #d4af37; 
+    border: 1px solid black;
     padding: 25px;
     width: 85%;
     border-radius: 8px;
@@ -10,7 +9,11 @@
     transition: 0.3s;
 }
 
-.report-card:hover { transform: translateY(-5px); }
+.report-card:hover { 
+    transform: translateY(-5px); 
+    border-color: #d4af37;
+    box-shadow: 0 0 15px rgba(212,175,55,0.15);
+}
 
 .report-icon { font-size: 3rem; margin-bottom: 10px; }
 

@@ -34,8 +34,8 @@ function CharacterCard({ player, onEdit }) {
                 <p><strong>Classe:</strong> {player.classe}</p>
                 <p><strong>Raça:</strong> {player.raca}</p>
                 <p><strong>Level:</strong> {player.lvl}</p>
-                <p><strong>Alinhamento:</strong> {player.alinhamento}</p>
                 <p><strong>Jogador:</strong> {player.jogador}</p>
+                <p className="char-desc">{player.descricao}</p>
               </>
             )}
               

@@ -1,10 +1,10 @@
 a {
-  color: #d4af37;
+  color: inherit;
   text-decoration: none;
-  font-weight: bold;
+  transition: color 0.2s ease, text-shadow 0.2s ease;
 }
 
 a:hover {
-  filter: brightness(1.2);
-  text-shadow: 0 0 5px #d4af37;
+  color: #ffea76;
+  text-shadow: 0 0 12px rgba(212, 175, 55, 0.24);
 }

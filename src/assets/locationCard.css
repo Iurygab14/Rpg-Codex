@@ -29,8 +29,7 @@
   height: 400px;       
   display: flex;
   background-color: #1a1a1a;
-  border: 1px solid #d4af37;
-  border-left: 5px solid #d4af37;
+  border: 1px solid black;
   border-radius: 8px;
   transition: transform 0.2s;
   position: relative;   
@@ -38,14 +37,14 @@
 }
 
 .location-card:hover {
-  transform: scale(1.02);
-  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+  transform: translateY(-5px);
+  border-color: #d4af37;
+  box-shadow: 0 0 15px rgba(212,175,55,0.15);
 }
 
 .loc-image {
   width: 40%;          
   object-fit: cover; 
-  border-right: 1px solid #d4af37;
 }
 
 .loc-info {

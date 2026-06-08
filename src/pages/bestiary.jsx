@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { db } from "../firebaseConfig";
-import { serverTimestamp } from "firebase/firestore";
 import { uploadImage } from "../services/cloudinary";
 import "../assets/bestiary.css";
 import BestiaryCard from "../components/bestiaryCard.jsx";
-import {collection, onSnapshot, addDoc, updateDoc, doc} from "firebase/firestore";
+import { collection, onSnapshot, addDoc, updateDoc, doc, serverTimestamp } from "firebase/firestore";
 
 function Bestiary() {
 
