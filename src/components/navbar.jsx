@@ -6,6 +6,7 @@ function Navbar() {
   const links = [
     { to: "/", label: "Início" },
     { to: "/characters", label: "Personagens" },
+    { to: "/factions", label: "Facções" },
     { to: "/locations", label: "Locais" },
     { to: "/reports", label: "Relatórios" },
     { to: "/bestiary", label: "Bestiário" },

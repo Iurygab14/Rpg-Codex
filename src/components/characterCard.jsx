@@ -2,7 +2,7 @@ import "../assets/characterCard.css";
 import { db } from "../firebaseConfig.js";
 import { doc, deleteDoc } from "firebase/firestore"; 
 
-function CharacterCard({ player, onEdit }) {
+function CharacterCard({ player, onEdit, onRemoveFromFaction }) {
 
   const handleExcluir = async () => {
     const confirmar = window.confirm(`Deseja mesmo excluir ${player.nome}?`);
@@ -19,8 +19,20 @@ function CharacterCard({ player, onEdit }) {
   return (
     <div className="character-card">
       <div className="card-actions">
-        <button className="btn-edit" onClick={() => onEdit(player)} title="Editar">✏️</button>
-        <button className="btn-delete" onClick={handleExcluir} title="Excluir">🗑️</button>
+        {onRemoveFromFaction ? (
+          <button
+            className="btn-delete"
+            onClick={() => onRemoveFromFaction(player.id)}
+            title="Remover da Facção"
+          >
+            Remover
+          </button>
+        ) : (
+          <>
+            <button className="btn-edit" onClick={() => onEdit(player)} title="Editar">✏️</button>
+            <button className="btn-delete" onClick={handleExcluir} title="Excluir">🗑️</button>
+          </>
+        )}
       </div>
 
       <img src={player.imagem} alt={player.nome} className="char-image" />

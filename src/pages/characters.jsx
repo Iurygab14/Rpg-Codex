@@ -24,7 +24,8 @@ function Characters() {
     nome: "", imagem: "", tipo: "NPCs",
     classe: "", raca: "", lvl: "", jogador: "", alinhamento: "",
     localizacao: "", reino: "", ocupacao: "", descricao: "", 
-    hp: "", ac: "", iniciativa: "", status: "Vivo"
+    hp: "", ac: "", iniciativa: "", status: "Vivo",
+    factionId: ""
   });
 
   useEffect(() => {
