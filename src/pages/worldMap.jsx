@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { db } from "../firebaseConfig";
-import {addDoc, collection, deleteDoc, deleteField, doc, onSnapshot, updateDoc,} from "firebase/firestore";
+import { addDoc, collection, deleteDoc, deleteField, doc, onSnapshot, updateDoc } from "firebase/firestore";
+import { uploadImage } from "../services/cloudinary";
 import "../assets/worldMap.css";
 
 function WorldMap() {
   const [markers, setMarkers] = useState([]);
   const [locations, setLocations] = useState([]);
+  const [pointsOfInterest, setPointsOfInterest] = useState([]);
+  const [markerImageFile, setMarkerImageFile] = useState(null);
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [selectedLocationId, setSelectedLocationId] = useState("");
   const [creatingMarker, setCreatingMarker] = useState(false);
@@ -39,8 +42,20 @@ function WorldMap() {
     return () => unsub();
   }, []);
 
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "pointsOfInterest"), (snapshot) => {
+      setPointsOfInterest(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+    });
+
+    return () => unsub();
+  }, []);
+
   const linkedLocations = selectedMarker
     ? locations.filter((location) => location.marcadorPai === selectedMarker.id)
+    : [];
+
+  const pointsForSelectedMarker = selectedMarker
+    ? pointsOfInterest.filter((point) => linkedLocations.some((location) => location.id === point.locationId))
     : [];
 
   const availableLocationsToLink = locations.filter(
@@ -103,9 +118,15 @@ function WorldMap() {
     }
 
     try {
+      let imageUrl = "";
+      if (markerImageFile) {
+        imageUrl = await uploadImage(markerImageFile);
+      }
+
       await addDoc(collection(db, "mapMarkers"), {
         nome: newMarkerName.trim(),
         descricao: newMarkerDescription.trim(),
+        imagem: imageUrl,
         x: newMarkerPosition.x,
         y: newMarkerPosition.y,
       });
@@ -114,6 +135,7 @@ function WorldMap() {
       setNewMarkerName("");
       setNewMarkerDescription("");
       setNewMarkerPosition(null);
+      setMarkerImageFile(null);
       setErrorMessage("");
     } catch (error) {
       console.error("Erro ao salvar marcador:", error);
@@ -330,6 +352,15 @@ function WorldMap() {
             </section>
 
             <section className="panel-section">
+              <strong>Imagem</strong>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(event) => setMarkerImageFile(event.target.files[0])}
+              />
+            </section>
+
+            <section className="panel-section">
               <strong>Posição</strong>
               <div className="position-info">
                 {newMarkerPosition ? (
@@ -380,25 +411,44 @@ function WorldMap() {
 
             <section className="panel-section">
               <strong>Localizações vinculadas</strong>
-              <p>{linkedLocations.length} localizações registradas</p>
-              <ul className="linked-location-list">
-                {linkedLocations.map((location) => (
-                  <li
-                    key={location.id}
-                    className={`linked-location-item ${
-                      selectedLocation?.id === location.id ? "active" : ""
-                    }`}
-                    onClick={() => handleLocationSelect(location.id)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") handleLocationSelect(location.id);
-                    }}
-                  >
-                    {location.nome}
-                  </li>
-                ))}
-              </ul>
+              {linkedLocations.length === 0 ? (
+                <p>Este marcador ainda não possui uma localização principal vinculada.</p>
+              ) : (
+                <>
+                  <p>{linkedLocations.length} localizações registradas</p>
+                  <ul className="linked-location-list">
+                    {linkedLocations.map((location) => (
+                      <li
+                        key={location.id}
+                        className={`linked-location-item ${
+                          selectedLocation?.id === location.id ? "active" : ""
+                        }`}
+                        onClick={() => handleLocationSelect(location.id)}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") handleLocationSelect(location.id);
+                        }}
+                      >
+                        {location.nome}
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </section>
+
+            <section className="panel-section">
+              <strong>Localizações internas</strong>
+              {pointsForSelectedMarker.length === 0 ? (
+                <p>Não há pontos de interesse cadastrados para as localidades vinculadas.</p>
+              ) : (
+                <ul className="linked-location-list">
+                  {pointsForSelectedMarker.map((point) => (
+                    <li key={point.id}>{point.nome}</li>
+                  ))}
+                </ul>
+              )}
             </section>
 
             <div className="panel-actions">

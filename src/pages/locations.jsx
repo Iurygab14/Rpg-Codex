@@ -1,23 +1,20 @@
 import { useState, useEffect } from "react";
 import { db } from "../firebaseConfig.js";
-import { collection, onSnapshot, addDoc, doc, updateDoc } from "firebase/firestore";
+import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import LocationCard from "../components/locationCard.jsx";
 import "../assets/locations.css";
 import { uploadImage } from "../services/cloudinary";
-import { serverTimestamp } from "firebase/firestore";
 
 function Locations() {
     const [lista, setLista] = useState([]);
-    const [showModal, setShowModal] = useState(false); 
-    const [isEditing, setIsEditing] = useState(false); 
+    const [showModal, setShowModal] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
     const [currentId, setCurrentId] = useState(null);
     const [buscaNome, setBuscaNome] = useState("");
-    const [buscaLocalizacao, setBuscaLocalizacao] = useState("");
     const [imagemArquivo, setImagemArquivo] = useState(null);
     const [novoLocal, setNovoLocal] = useState({
-        nome: "", 
+        nome: "",
         imagem: "",
-        localizacao: "", 
         descricao: ""
     });
     
@@ -40,7 +37,8 @@ function Locations() {
         setShowModal(false);
         setIsEditing(false);
         setCurrentId(null);
-        setNovoLocal({ nome: "", imagem: "", localizacao: "", descricao: "" });
+        setImagemArquivo(null);
+        setNovoLocal({ nome: "", imagem: "", descricao: "" });
     }; 
 
     const handleSubmit = async (e) => {
@@ -85,19 +83,9 @@ function Locations() {
                             <label>Nome
                                 <input 
                                     type="text" 
-                                    placeholder="Ex: Taverna..." 
+                                    placeholder="Ex: Kolbrook..." 
                                     value={buscaNome}
                                     onChange={(e) => setBuscaNome(e.target.value)}
-                                    className="search-input-loc"
-                                />
-                            </label>
-
-                            <label>Localização
-                                <input 
-                                    type="text" 
-                                    placeholder="Ex: Kolbrook..." 
-                                    value={buscaLocalizacao}
-                                    onChange={(e) => setBuscaLocalizacao(e.target.value)}
                                     className="search-input-loc"
                                 />
                             </label>
@@ -114,8 +102,7 @@ function Locations() {
 
                         <form onSubmit={handleSubmit}>
                             <input placeholder="Nome" value={novoLocal.nome} onChange={(e) => setNovoLocal({...novoLocal, nome: e.target.value})} required />
-                            <input type="file"  accept="image/*"  onChange={(e) => setImagemArquivo(e.target.files[0])}/>
-                            <input placeholder="Localização" value={novoLocal.localizacao} onChange={(e) => setNovoLocal({...novoLocal, localizacao: e.target.value})} required />
+                            <input type="file" accept="image/*" onChange={(e) => setImagemArquivo(e.target.files[0])}/>
                             <input placeholder="Descrição" value={novoLocal.descricao} onChange={(e) => setNovoLocal({...novoLocal, descricao: e.target.value})} required />
 
                             <button type="submit" className="btn-save">
@@ -130,15 +117,9 @@ function Locations() {
                 {lista
                     .filter(loc => {
                         const termoNome = buscaNome.toLowerCase().trim();
-                        const termoLocal = buscaLocalizacao.toLowerCase().trim();
-
                         const palavrasNome = loc.nome.toLowerCase().split(" ");
                         const bateNome = termoNome === "" || palavrasNome.some(p => p.startsWith(termoNome));
-
-                        const palavrasLocal = loc.localizacao.toLowerCase().split(" ");
-                        const bateLocal = termoLocal === "" || palavrasLocal.some(p => p.startsWith(termoLocal));
-
-                        return bateNome && bateLocal;
+                        return bateNome;
                     })
                     .sort((a, b) => a.nome.localeCompare(b.nome))
                     .map((loc) => (

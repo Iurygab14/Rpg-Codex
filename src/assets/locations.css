@@ -8,7 +8,8 @@
   padding: 0 24px 24px;
 }
 
-.header-actions-loc {
+.header-actions-loc,
+.header-actions-location {
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -69,4 +70,161 @@
   grid-template-columns: repeat(auto-fit, minmax(360px, 378px));
   gap: 24px;
   width: 100%;
+}
+
+.location-detail-card {
+  display: grid;
+  grid-template-columns: minmax(320px, 1.2fr) minmax(280px, 1fr);
+  gap: 28px;
+  background: rgba(0, 0, 0, 0.24);
+  border: 1px solid rgba(212, 175, 55, 0.14);
+  border-radius: 22px;
+  padding: 24px;
+}
+
+.location-detail-image {
+  width: 100%;
+  border-radius: 18px;
+  object-fit: cover;
+  min-height: 380px;
+  max-height: 520px;
+}
+
+.location-detail-info h1 {
+  margin-top: 0;
+  color: #d4af37;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.location-detail-info p {
+  color: #ccc;
+  line-height: 1.8;
+  margin: 0 0 18px 0;
+}
+
+.location-detail-info .detail-row {
+  display: grid;
+  gap: 18px;
+  margin-top: 12px;
+}
+
+.location-detail-info .detail-row span {
+  display: block;
+  color: var(--accent);
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.location-detail-info .detail-row p {
+  margin: 0;
+  color: #eee;
+}
+
+.points-section h2 {
+  margin: 0;
+  color: #d4af37;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.points-list {
+  display: grid;
+  gap: 20px;
+  margin-top: 18px;
+}
+
+.point-card {
+  display: flex;
+  gap: 18px;
+  background: #161616;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 18px;
+  overflow: hidden;
+}
+
+.point-card img {
+  width: 160px;
+  object-fit: cover;
+}
+
+.point-card div {
+  padding: 20px;
+}
+
+.point-card strong {
+  display: block;
+  color: #d4af37;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.point-card p {
+  margin: 0;
+  color: #ccc;
+  line-height: 1.7;
+}
+
+.point-card-body {
+  flex: 1;
+  padding: 20px;
+}
+
+.point-card-actions {
+  display: flex;
+  gap: 10px;
+  padding: 20px;
+  justify-content: center;
+  margin-left: auto;
+}
+
+.btn-back {
+  background: none;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.btn-back:hover {
+  background: rgba(212, 175, 55, 0.16);
+}
+
+.modal-content label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 18px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.modal-content input,
+.modal-content textarea {
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+
+.modal-content textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.action-buttons-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.empty-state {
+  color: #ccc;
+  padding: 18px 0;
 }

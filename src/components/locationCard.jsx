@@ -1,9 +1,13 @@
+import { useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig.js";
 import { doc, deleteDoc } from "firebase/firestore"; 
 import "../assets/locationCard.css";
 
 function LocationCard({ location, onEdit }) {
-    const handleExcluir = async () => {
+  const navigate = useNavigate();
+
+  const handleExcluir = async (event) => {
+    event.stopPropagation();
     const confirmar = window.confirm(`Deseja mesmo excluir ${location.nome}?`);
     
     if (confirmar) {
@@ -17,10 +21,9 @@ function LocationCard({ location, onEdit }) {
   };
 
   return (
-    <div className="location-card">
-      
+    <div className="location-card" onClick={() => navigate(`/locations/${location.id}`)}>
       <div className="card-actions">
-        <button className="btn-edit" onClick={() => onEdit(location)}>✏️</button>
+        <button className="btn-edit" onClick={(event) => { event.stopPropagation(); onEdit(location); }}>✏️</button>
         <button className="btn-delete" onClick={handleExcluir}>🗑️</button>
       </div>
 
@@ -33,8 +36,7 @@ function LocationCard({ location, onEdit }) {
       <div className="loc-info">
         <div className="loc-details">
             <h3>{location.nome}</h3>
-            <p><strong>Localização:</strong> {location.localizacao}</p>
-            <p><strong></strong> {location.descricao}</p>
+            <p>{location.descricao}</p>
         </div>        
       </div>
     </div>
