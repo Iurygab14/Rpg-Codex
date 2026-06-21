@@ -98,7 +98,15 @@
   cursor: crosshair;
 }
 
-.worldmap-frame.selecting {
+.worldmap-frame.positioning::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+.worldmap-frame.positioning {
   outline: 3px dashed rgba(212, 175, 55, 0.35);
 }
 

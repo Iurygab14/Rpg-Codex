@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig.js";
 import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp } from "firebase/firestore";
 import LocationCard from "../components/locationCard.jsx";
@@ -6,6 +7,7 @@ import "../assets/locations.css";
 import { uploadImage } from "../services/cloudinary";
 
 function Locations() {
+    const navigate = useNavigate();
     const [lista, setLista] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
@@ -59,14 +61,19 @@ function Locations() {
 
         if (isEditing) {
             await updateDoc(doc(db, "locations", currentId), dadosParaSalvar);
+            fecharModal();
         } else {
-            await addDoc(collection(db, "locations"), {
-            ...dadosParaSalvar,
-            criadoEm: serverTimestamp(),
+            const docRef = await addDoc(collection(db, "locations"), {
+                ...dadosParaSalvar,
+                criadoEm: serverTimestamp(),
+            });
+            fecharModal();
+            navigate("/worldmap", {
+                state: {
+                    positioningLocationId: docRef.id,
+                },
             });
         }
-
-        fecharModal();
     };
     
     return (

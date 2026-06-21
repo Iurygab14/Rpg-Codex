@@ -147,6 +147,7 @@
 
 .point-card img {
   width: 160px;
+  height: 100px;
   object-fit: cover;
 }
 
@@ -174,6 +175,7 @@
 
 .point-card-actions {
   display: flex;
+  height: 85px;
   gap: 10px;
   padding: 20px;
   justify-content: center;
