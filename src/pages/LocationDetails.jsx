@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { db } from "../firebaseConfig.js";
 import {
   collection,
@@ -20,6 +20,7 @@ function LocationDetails() {
   const navigate = useNavigate();
   const [location, setLocation] = useState(null);
   const [points, setPoints] = useState([]);
+  const [historicalEvents, setHistoricalEvents] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [showLocationEditModal, setShowLocationEditModal] = useState(false);
   const [imagemArquivo, setImagemArquivo] = useState(null);
@@ -42,6 +43,18 @@ function LocationDetails() {
     const q = query(collection(db, "pointsOfInterest"), where("locationId", "==", id));
     const unsub = onSnapshot(q, (snapshot) => {
       setPoints(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+    });
+    return () => unsub();
+  }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    const eventsQuery = query(
+      collection(db, "timeline"),
+      where("localizacoes", "array-contains", id)
+    );
+    const unsub = onSnapshot(eventsQuery, (snapshot) => {
+      setHistoricalEvents(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     });
     return () => unsub();
   }, [id]);
@@ -200,6 +213,34 @@ function LocationDetails() {
               </li>
             ))}
           </ul>
+        )}
+      </section>
+
+      <section className="points-section">
+        <div className="points-header">
+          <h2>Eventos Históricos</h2>
+          <p>{historicalEvents.length} registro(s)</p>
+        </div>
+
+        {historicalEvents.length === 0 ? (
+          <p>Esta localização ainda não tem eventos vinculados.</p>
+        ) : (
+          <div className="points-list">
+            {historicalEvents
+              .sort((a, b) => a.ano - b.ano)
+              .map((event) => (
+                <div key={event.id} className="point-card">
+                  {event.imagem && <img src={event.imagem} alt={event.titulo} />}
+                  <div className="point-card-body">
+                    <strong>{event.titulo}</strong>
+                    <p>{event.ano} — {event.dataExibicao}</p>
+                  </div>
+                  <div className="point-card-actions">
+                    <Link to={`/timeline/${event.id}`} className="btn-save">Ver</Link>
+                  </div>
+                </div>
+              ))}
+          </div>
         )}
       </section>
 

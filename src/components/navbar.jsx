@@ -8,6 +8,7 @@ function Navbar() {
     { to: "/characters", label: "Personagens" },
     { to: "/factions", label: "Facções" },
     { to: "/locations", label: "Locais" },
+    { to: "/timeline", label: "Cronologia" },
     { to: "/reports", label: "Relatórios" },
     { to: "/bestiary", label: "Bestiário" },
     { to: "/worldmap", label: "Mapa" },

@@ -1,8 +1,10 @@
 import "../assets/characterCard.css";
+import { useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig.js";
 import { doc, deleteDoc } from "firebase/firestore"; 
 
 function CharacterCard({ player, onEdit, onRemoveFromFaction }) {
+  const navigate = useNavigate();
 
   const handleExcluir = async () => {
     const confirmar = window.confirm(`Deseja mesmo excluir ${player.nome}?`);
@@ -17,20 +19,41 @@ function CharacterCard({ player, onEdit, onRemoveFromFaction }) {
   };
 
   return (
-    <div className="character-card">
+    <div className="character-card" onClick={() => navigate(`/characters/${player.id}`)}>
       <div className="card-actions">
         {onRemoveFromFaction ? (
           <button
             className="btn-delete"
-            onClick={() => onRemoveFromFaction(player.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemoveFromFaction(player.id);
+            }}
             title="Remover da Facção"
           >
             Remover
           </button>
         ) : (
           <>
-            <button className="btn-edit" onClick={() => onEdit(player)} title="Editar">✏️</button>
-            <button className="btn-delete" onClick={handleExcluir} title="Excluir">🗑️</button>
+            <button
+              className="btn-edit"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(player);
+              }}
+              title="Editar"
+            >
+              ✏️
+            </button>
+            <button
+              className="btn-delete"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleExcluir();
+              }}
+              title="Excluir"
+            >
+              🗑️
+            </button>
           </>
         )}
       </div>

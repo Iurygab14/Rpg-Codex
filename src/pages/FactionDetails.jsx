@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig.js";
 import {
   collection,
@@ -20,6 +20,7 @@ function FactionDetails() {
   const [faction, setFaction] = useState(null);
   const [members, setMembers] = useState([]);
   const [players, setPlayers] = useState([]);
+  const [historicalEvents, setHistoricalEvents] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editFaction, setEditFaction] = useState({
@@ -66,6 +67,20 @@ function FactionDetails() {
     });
 
     return () => unsubMembers();
+  }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+
+    const eventsQuery = query(
+      collection(db, "timeline"),
+      where("faccoes", "array-contains", id)
+    );
+    const unsubEvents = onSnapshot(eventsQuery, (snapshot) => {
+      setHistoricalEvents(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+    });
+
+    return () => unsubEvents();
   }, [id]);
 
   useEffect(() => {
@@ -184,6 +199,27 @@ function FactionDetails() {
                   player={member}
                   onRemoveFromFaction={() => handleRemoveFromFaction(member.id)}
                 />
+              ))}
+          </div>
+        )}
+      </section>
+
+      <section className="members-section">
+        <h2>Eventos Históricos</h2>
+        {historicalEvents.length === 0 ? (
+          <p className="empty-state">Nenhum evento histórico vinculado.</p>
+        ) : (
+          <div className="player-selection-list">
+            {historicalEvents
+              .sort((a, b) => a.ano - b.ano)
+              .map((event) => (
+                <div key={event.id} className="player-list-item">
+                  <div>
+                    <strong>{event.titulo}</strong>
+                    <p className="player-mini-info">{event.ano} — {event.dataExibicao}</p>
+                  </div>
+                  <Link to={`/timeline/${event.id}`} className="btn-save">Ver</Link>
+                </div>
               ))}
           </div>
         )}
