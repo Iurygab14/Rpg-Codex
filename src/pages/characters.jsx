@@ -91,7 +91,7 @@ function Characters() {
       <div className="header-actions-char">
         <div className="action-bar">
           <button className="btn-add-main" onClick={() => setShowModal(true)}>
-            + Novo Peronagem
+            + Novo Personagem
           </button>
           <div className="search-container-char">
             <div className="filter-header-char"><span>FILTROS DE BUSCA</span></div>

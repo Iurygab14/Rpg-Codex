@@ -266,7 +266,7 @@ img {
   background: rgba(212, 175, 55, 0.24);
 }
 
-.report-download-btn {
+.mission-download-btn {
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -277,7 +277,7 @@ img {
   padding: 0.85rem 1.1rem;
 }
 
-.report-download-btn:hover {
+.mission-download-btn:hover {
   background: rgba(212, 175, 55, 0.28);
 }
 

@@ -140,7 +140,7 @@
   font-size: 0.82rem;
 }
 
-.report-list {
+.mission-list {
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -162,7 +162,7 @@
   transform: translateY(-2px);
 }
 
-.report-card-header {
+.mission-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -170,11 +170,11 @@
   flex-wrap: wrap;
 }
 
-.report-card-header h4 {
+.mission-card-header h4 {
   margin: 0;
 }
 
-.report-card-header p {
+.mission-card-header p {
   margin: 0;
   color: var(--text-muted);
 }
@@ -399,7 +399,7 @@
 
 }
 
-.report-card-header {
+.mission-card-header {
     display: flex;
 
     justify-content: space-between;
@@ -409,7 +409,7 @@
     gap: 15px;
 }
 
-.report-download-btn {
+.mission-download-btn {
     text-decoration: none;
     padding: 8px 14px;
     border-radius: 8px;
@@ -420,7 +420,7 @@
     transition: 0.2s;
 }
 
-.report-download-btn:hover {
+.mission-download-btn:hover {
     transform: translateY(-2px);
     opacity: 0.9;
 }

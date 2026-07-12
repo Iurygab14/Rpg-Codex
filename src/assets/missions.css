@@ -8,14 +8,14 @@
   padding: 0 24px 24px;
 }
 
-.header-actions-timeline {
+.header-actions-mission {
   width: 100%;
   display: flex;
   flex-direction: column;
   gap: 22px;
 }
 
-.timeline-actions {
+.mission-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -23,7 +23,7 @@
   gap: 18px;
 }
 
-.timeline-summary {
+.mission-summary {
   width: 100%;
   background: rgba(0, 0, 0, 0.24);
   border: 1px solid rgba(212, 175, 55, 0.14);
@@ -31,20 +31,20 @@
   padding: 24px;
 }
 
-.timeline-summary h1 {
+.mission-summary h1 {
   margin: 0;
   color: #d4af37;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
-.timeline-summary p {
+.mission-summary p {
   margin: 12px 0 0;
   color: #ccc;
   line-height: 1.7;
 }
 
-.search-container-timeline {
+.search-container-mission {
   width: 100%;
   max-width: 100%;
   background: rgba(0, 0, 0, 0.24);
@@ -53,7 +53,7 @@
   padding: 24px;
 }
 
-.filter-header-timeline {
+.filter-header-mission {
   color: var(--accent);
   font-size: 0.82rem;
   font-weight: 700;
@@ -62,13 +62,13 @@
   text-transform: uppercase;
 }
 
-.filter-inputs-timeline {
+.filter-inputs-mission {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 18px;
 }
 
-.filter-inputs-timeline label {
+.filter-inputs-mission label {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -77,7 +77,7 @@
   text-transform: uppercase;
 }
 
-.search-input-timeline,
+.search-input-mission,
 .modal-content select {
   background: rgba(0, 0, 0, 0.28);
   border: 1px solid rgba(255, 255, 255, 0.08);
@@ -86,18 +86,18 @@
   padding: 12px 14px;
 }
 
-.timeline-group {
+.mission-group {
   display: grid;
   gap: 30px;
   width: 100%;
 }
 
-.timeline-year-block {
+.mission-year-block {
   display: grid;
   gap: 18px;
 }
 
-.timeline-year-label {
+.mission-year-label {
   display: inline-flex;
   align-items: center;
   gap: 14px;
@@ -107,7 +107,7 @@
   text-transform: uppercase;
 }
 
-.timeline-year-label::before {
+.mission-year-label::before {
   content: "";
   width: 10px;
   height: 10px;
@@ -115,12 +115,12 @@
   background: #d4af37;
 }
 
-.timeline-events-list {
+.mission-events-list {
   display: grid;
   gap: 20px;
 }
 
-.timeline-card {
+.mission-card {
   position: relative;
   display: grid;
   grid-template-columns: 220px 1fr;
@@ -133,13 +133,13 @@
   transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.timeline-card:hover {
+.mission-card:hover {
   transform: translateY(-3px);
   border-color: rgba(212, 175, 55, 0.32);
   box-shadow: 0 22px 45px rgba(0, 0, 0, 0.25);
 }
 
-.timeline-card-actions {
+.mission-card-actions {
   position: absolute;
   top: 16px;
   right: 16px;
@@ -148,10 +148,10 @@
   z-index: 1;
 }
 
-.timeline-card-image,
-.timeline-card-image-placeholder {
+.mission-card-image,
+.mission-card-image-placeholder {
   width: 100%;
-  height: 100%;
+  height: 350px;
   min-height: 240px;
   object-fit: cover;
   background: rgba(255, 255, 255, 0.05);
@@ -163,18 +163,18 @@
   letter-spacing: 0.08em;
 }
 
-.timeline-card-image-placeholder {
+.mission-card-image-placeholder {
   padding: 24px;
 }
 
-.timeline-card-body {
+.mission-card-body {
   padding: 24px 24px 24px 0;
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
 
-.timeline-card-body h3 {
+.mission-card-body h3 {
   margin: 0;
   color: #fff;
   font-size: 1.4rem;
@@ -182,17 +182,23 @@
   text-transform: uppercase;
 }
 
-.timeline-card-body p {
+.mission-card-body p {
   margin: 0;
   color: #ccc;
   line-height: 1.75;
 }
 
-.timeline-card-date {
+.mission-card-date {
   color: #d4af37;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   font-size: 0.82rem;
+}
+
+.mission-card-meta {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
 }
 
 .related-items {
@@ -422,19 +428,19 @@
   transform: scale(1.15);
 }
 
-.event-meta {
+.mission-form-meta {
   display: grid;
   gap: 18px;
 }
 
-.event-meta label {
+.mission-form-meta label {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.event-meta input,
-.event-meta textarea {
+.mission-form-meta input,
+.mission-form-meta textarea {
   background: rgba(0, 0, 0, 0.28);
   border: 1px solid rgba(255, 255, 255, 0.08);
   color: var(--text);
@@ -442,8 +448,8 @@
   padding: 12px 14px;
 }
 
-.event-meta input:focus,
-.event-meta textarea:focus {
+.mission-form-meta input:focus,
+.mission-form-meta textarea:focus {
   outline: none;
   border-color: rgba(212, 175, 55, 0.4);
 }
@@ -459,7 +465,7 @@
   padding-top: 12px;
 }
 
-.event-detail-card {
+.mission-detail-card {
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
   gap: 28px;
@@ -469,14 +475,14 @@
   overflow: hidden;
 }
 
-.event-detail-image {
+.mission-detail-image {
   width: 100%;
-  height: 100%;
+  height: 1000px;
   min-height: 420px;
   object-fit: cover;
 }
 
-.event-detail-info {
+.mission-detail-info {
   padding: 24px;
   display: flex;
   flex-direction: column;
@@ -487,29 +493,29 @@
   align-self: start;
 }
 
-.event-detail-info h1 {
+.mission-detail-info h1 {
   margin: 0;
   color: #d4af37;
   text-transform: uppercase;
 }
 
-.event-detail-info p {
+.mission-detail-info p {
   margin: 0;
   color: #ccc;
   line-height: 1.8;
 }
 
-.event-detail-stats {
+.mission-detail-stats {
   display: grid;
   gap: 16px;
 }
 
-.event-detail-stats span,
-.event-detail-stats p {
+.mission-detail-stats span,
+.mission-detail-stats p {
   display: block;
 }
 
-.event-detail-stats h2 {
+.mission-detail-stats h2 {
   color: var(--accent);
   text-transform: uppercase;
   font-size: 1.3rem;
@@ -519,7 +525,7 @@
   margin-top: 12px;
 }
 
-.event-detail-stats p {
+.mission-detail-stats p {
   font-size: 1.1rem;
 }
 
@@ -546,25 +552,25 @@
 }
 
 @media (max-width: 980px) {
-  .timeline-card,
-  .event-detail-card,
-  .timeline-group {
+  .mission-card,
+  .mission-detail-card,
+  .mission-group {
     grid-template-columns: 1fr;
   }
 
-  .timeline-card-image,
-  .timeline-card-image-placeholder {
+  .mission-card-image,
+  .mission-card-image-placeholder {
     min-height: 220px;
   }
 }
 
 @media (max-width: 700px) {
-  .timeline-card,
-  .event-detail-card {
+  .mission-card,
+  .mission-detail-card {
     grid-template-columns: 1fr;
   }
 
-  .event-detail-info {
+  .mission-detail-info {
     padding: 18px;
   }
 }

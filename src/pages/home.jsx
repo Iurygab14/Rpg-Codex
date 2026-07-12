@@ -6,7 +6,7 @@ import "../assets/home.css";
 function Home() {
     const [characters, setCharacters] = useState([]);
     const [locations, setLocations] = useState([]);
-    const [reports, setReports] = useState([]);
+    const [missions, setMissions] = useState([]);
     const [bestiary, setBestiary] = useState([]);
 
     useEffect(() => {
@@ -34,10 +34,10 @@ function Home() {
             }
         );
 
-        const unsubReports = onSnapshot(
-            collection(db, "reports"),
+        const unsubMissions = onSnapshot(
+            collection(db, "missions"),
             (snapshot) => {
-                setReports(
+                setMissions(
                     snapshot.docs.map(doc => ({
                         id: doc.id,
                         ...doc.data()
@@ -61,7 +61,7 @@ function Home() {
         return () => {
             unsubPlayers();
             unsubLocations();
-            unsubReports();
+            unsubMissions();
             unsubBestiary();
         };
     }, []);
@@ -92,8 +92,8 @@ function Home() {
             ]
             : null;
 
-    const ultimosRelatorios = [...reports]
-        .sort((a, b) => b.data.localeCompare(a.data))
+    const ultimasMissoes = [...missions]
+        .sort((a, b) => (a.data || "").localeCompare(b.data || ""))
         .slice(0, 5);
 
     const ultimasCriaturas = [...bestiary]
@@ -131,9 +131,9 @@ function Home() {
                     </div>
 
                     <div className="stat-card">
-                        <span>📄</span>
-                        <h2>{reports.length}</h2>
-                        <p>Relatórios</p>
+                        <span>�️</span>
+                        <h2>{missions.length}</h2>
+                        <p>Missões</p>
                     </div>
 
                     <div className="stat-card">
@@ -207,37 +207,34 @@ function Home() {
 
                 <div className="dashboard-right">
 
-                    <h2>📄 Últimos Relatórios</h2>
+                    <h2>�️ Últimas Missões</h2>
 
-                    <div className="report-list">
+                    <div className="mission-list">
 
-                        {ultimosRelatorios.map(rep => (
+                        {ultimasMissoes.map(rep => (
 
                             <div
                                 key={rep.id}
                                 className="mini-card"
                             >
 
-                                <div className="report-card-header">
+                                <div className="mission-card-header">
 
                                     <div>
 
-                                        <h4>{rep.nome}</h4>
+                                        <h4>{rep.titulo}</h4>
 
                                         <p>
-                                            {rep.data
-                                                .split("-")
-                                                .reverse()
-                                                .join("/")}
+                                            {rep.dataExibicao || rep.data}
                                         </p>
 
                                     </div>
 
                                     <a
-                                        href={rep.pdfUrl}
+                                        href={rep.relatorioUrl}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="report-download-btn"
+                                        className="mission-download-btn"
                                     >
                                         📥 Abrir
                                     </a>
