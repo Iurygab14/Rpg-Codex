@@ -23,8 +23,8 @@ function Characters() {
   const [novoChar, setNovoChar] = useState({
     nome: "", imagem: "", tipo: "NPCs",
     classe: "", raca: "", lvl: "", jogador: "", alinhamento: "",
-    localizacao: "", reino: "", ocupacao: "", descricao: "", 
-    hp: "", ac: "", iniciativa: "", status: "Vivo",
+    localizacao: "", ocupacao: "", descricao: "", 
+    hp: "", ac: "", status: "Vivo",
     factionId: ""
   });
 
@@ -50,8 +50,8 @@ function Characters() {
     setNovoChar({ 
       nome: "", imagem: "", tipo: "NPCs",
       classe: "", raca: "", lvl: "", jogador: "", alinhamento: "",
-      localizacao: "", reino: "", ocupacao: "", descricao: "", 
-      hp: "", ac: "", iniciativa: "", status: "Vivo" 
+      localizacao: "", ocupacao: "", descricao: "", 
+      hp: "", ac: "", status: "Vivo" 
     });
   };
 

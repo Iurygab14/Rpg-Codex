@@ -78,7 +78,6 @@ function CharacterCard({ player, onEdit, onRemoveFromFaction }) {
               <div className="npc-info">
                 <p><strong>Raça:</strong> {player.raca}</p>
                 <p><strong>Localização:</strong> {player.localizacao}</p>
-                <p><strong>Reino:</strong> {player.reino}</p>
                 <p><strong>Ocupação:</strong> {player.ocupacao}</p>
                 <p className="char-desc">{player.descricao}</p>
               </div>

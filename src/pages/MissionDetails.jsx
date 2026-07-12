@@ -75,6 +75,10 @@ function MissionDetails() {
             <h2>XP concedido</h2>
             <p>{Number(mission.xp ?? 0)} XP</p>
           </div>
+          <div className="mission-detail-stats">
+            <h2>Recompensa</h2>
+            <p>{mission.recompensa?.trim() ? mission.recompensa : "Nenhuma recompensa cadastrada."}</p>
+          </div>
 
           <div className="related-items">
             <div className="detail-section">

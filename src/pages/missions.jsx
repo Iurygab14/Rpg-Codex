@@ -33,6 +33,7 @@ function Missions() {
     relatorioNome: "",
     personagens: [],
     xp: 0,
+    recompensa: "",
   });
 
   useEffect(() => {
@@ -62,6 +63,7 @@ function Missions() {
       relatorioNome: mission.relatorioNome || "",
       personagens: mission.personagens || [],
       xp: mission.xp ?? 0,
+      recompensa: mission.recompensa || "",
     });
     setCurrentId(mission.id);
     setIsEditing(true);
@@ -85,6 +87,7 @@ function Missions() {
       relatorioNome: "",
       personagens: [],
       xp: 0,
+      recompensa: "",
     });
   };
 
@@ -282,6 +285,13 @@ function Missions() {
                       })
                     }
                     required
+                  />
+                  <textarea
+                    placeholder="Ex.: 500 moedas de ouro, Espada Longa Élfica e acesso à Fortaleza de Marlbor..."
+                    value={novaMissao.recompensa || ""}
+                    onChange={(e) =>
+                      setNovaMissao({ ...novaMissao, recompensa: e.target.value })
+                    }
                   />
                   <input
                     type="file"

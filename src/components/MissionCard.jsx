@@ -66,6 +66,9 @@ function MissionCard({ mission, onEdit }) {
           ⭐ XP: {Number(mission.xp ?? 0)}
         </span>
         <span className="mission-card-meta">
+          💰 Recompensa: {mission.recompensa || "Nenhuma"}
+        </span>
+        <span className="mission-card-meta">
           {mission.personagens?.length || 0} personagem(s) participante(s)
         </span>
       </div>
