@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { db } from "../firebaseConfig.js";
-import { collection, onSnapshot, addDoc, doc, updateDoc } from "firebase/firestore";
+import { collection, onSnapshot, addDoc, doc, updateDoc, query, where, serverTimestamp } from "firebase/firestore";
 import CharacterCard from "../components/characterCard.jsx";
 import "../assets/characters.css"
 import { uploadImage } from "../services/cloudinary";
-import { serverTimestamp } from "firebase/firestore";
+import { useCampaign } from "../context/CampaignContext.jsx";
 
 function Characters() {
+  const { currentCampaign, hasPermission } = useCampaign();
   const [lista, setLista] = useState([]);
   const [showModal, setShowModal] = useState(false); 
   const [isEditing, setIsEditing] = useState(false); 
@@ -29,12 +30,18 @@ function Characters() {
   });
 
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, "players"), (snapshot) => {
+    if (!currentCampaign?.id) {
+      setLista([]);
+      return undefined;
+    }
+
+    const playersQuery = query(collection(db, "players"), where("campaignId", "==", currentCampaign.id));
+    const unsub = onSnapshot(playersQuery, (snapshot) => {
       const dados = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setLista(dados);
     });
     return () => unsub();
-  }, []);
+  }, [currentCampaign?.id]);
 
   const handleOpenEdit = (player) => {
     setNovoChar(player); 
@@ -67,6 +74,7 @@ function Characters() {
     const dadosParaSalvar = {
       ...novoChar,
       imagem: imageUrl,
+      campaignId: currentCampaign.id,
     };
 
     delete dadosParaSalvar.id;
@@ -90,9 +98,11 @@ function Characters() {
     <div className="page-container">
       <div className="header-actions-char">
         <div className="action-bar">
-          <button className="btn-add-main" onClick={() => setShowModal(true)}>
-            + Novo Personagem
-          </button>
+          {hasPermission("createCharacters") && (
+            <button className="btn-add-main" onClick={() => setShowModal(true)}>
+              + Novo Personagem
+            </button>
+          )}
           <div className="search-container-char">
             <div className="filter-header-char"><span>FILTROS DE BUSCA</span></div>
             <div className="filter-inputs-char">

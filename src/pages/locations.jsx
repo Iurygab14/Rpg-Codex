@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig.js";
-import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp } from "firebase/firestore";
+import { collection, onSnapshot, addDoc, doc, updateDoc, serverTimestamp, query, where } from "firebase/firestore";
 import LocationCard from "../components/locationCard.jsx";
 import "../assets/locations.css";
 import { uploadImage } from "../services/cloudinary";
+import { useCampaign } from "../context/CampaignContext.jsx";
 
 function Locations() {
     const navigate = useNavigate();
+    const { currentCampaign, hasPermission } = useCampaign();
     const [lista, setLista] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
@@ -21,12 +23,18 @@ function Locations() {
     });
     
     useEffect(() => {
-        const unsub = onSnapshot(collection(db, "locations"), (snapshot) => {
+        if (!currentCampaign?.id) {
+            setLista([]);
+            return undefined;
+        }
+
+        const locationsQuery = query(collection(db, "locations"), where("campaignId", "==", currentCampaign.id));
+        const unsub = onSnapshot(locationsQuery, (snapshot) => {
             const dados = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setLista(dados);
         });
         return () => unsub();
-    }, []);
+    }, [currentCampaign?.id]);
 
     const handleOpenEdit = (location) => {
         setNovoLocal(location); 
@@ -55,6 +63,7 @@ function Locations() {
         const dadosParaSalvar = {
             ...novoLocal,
             imagem: imageUrl,
+            campaignId: currentCampaign.id,
         };
 
         delete dadosParaSalvar.id;
@@ -80,7 +89,9 @@ function Locations() {
         <div className="page-container">
             <div className="header-actions-loc">
                 <div className="action-bar">
-                    <button className="btn-add-main" onClick={() => setShowModal(true)}>+ Nova Localidade</button>
+                    {hasPermission("createLocations") && (
+                        <button className="btn-add-main" onClick={() => setShowModal(true)}>+ Nova Localidade</button>
+                    )}
 
                     <div className="search-container-loc">
                         <div className="filter-header-loc">

@@ -2,9 +2,11 @@ import { useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig.js";
 import { doc, deleteDoc } from "firebase/firestore"; 
 import "../assets/locationCard.css";
+import { useCampaign } from "../context/CampaignContext.jsx";
 
 function LocationCard({ location, onEdit }) {
   const navigate = useNavigate();
+  const { hasPermission } = useCampaign();
 
   const handleExcluir = async (event) => {
     event.stopPropagation();
@@ -23,8 +25,12 @@ function LocationCard({ location, onEdit }) {
   return (
     <div className="location-card" onClick={() => navigate(`/locations/${location.id}`)}>
       <div className="card-actions">
-        <button className="btn-edit" onClick={(event) => { event.stopPropagation(); onEdit(location); }}>✏️</button>
-        <button className="btn-delete" onClick={handleExcluir}>🗑️</button>
+        {hasPermission("editLocations") && (
+          <button className="btn-edit" onClick={(event) => { event.stopPropagation(); onEdit(location); }}>✏️</button>
+        )}
+        {hasPermission("deleteLocations") && (
+          <button className="btn-delete" onClick={handleExcluir}>🗑️</button>
+        )}
       </div>
 
       <img 

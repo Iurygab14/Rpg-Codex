@@ -1,8 +1,10 @@
 import { db } from "../firebaseConfig.js";
 import { doc, deleteDoc } from "firebase/firestore";
 import "../assets/bestiaryCard.css";
+import { useCampaign } from "../context/CampaignContext.jsx";
 
 function BestiaryCard({ criatura, onEdit }) {
+  const { hasPermission } = useCampaign();
 
   const handleExcluir = async () => {
 
@@ -31,19 +33,23 @@ function BestiaryCard({ criatura, onEdit }) {
     <div className="beast-card">
 
       <div className="card-actions">
-        <button
-          className="btn-edit"
-          onClick={() => onEdit(criatura)}
-        >
-          ✏️
-        </button>
+        {hasPermission("editCharacters") && (
+          <button
+            className="btn-edit"
+            onClick={() => onEdit(criatura)}
+          >
+            ✏️
+          </button>
+        )}
 
-        <button
-          className="btn-delete"
-          onClick={handleExcluir}
-        >
-          🗑️
-        </button>
+        {hasPermission("deleteCharacters") && (
+          <button
+            className="btn-delete"
+            onClick={handleExcluir}
+          >
+            🗑️
+          </button>
+        )}
       </div>
 
       <img

@@ -12,9 +12,11 @@ import {
 import { uploadImage } from "../services/cloudinary";
 import CharacterCard from "../components/characterCard.jsx";
 import "../assets/factions.css";
+import { useCampaign } from "../context/CampaignContext.jsx";
 
 function FactionDetails() {
   const { id } = useParams();
+  const { currentCampaign, hasPermission } = useCampaign();
   const navigate = useNavigate();
 
   const [faction, setFaction] = useState(null);
@@ -34,11 +36,11 @@ function FactionDetails() {
   const [buscaPlayerNome, setBuscaPlayerNome] = useState("");
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !currentCampaign?.id) return undefined;
 
     const factionRef = doc(db, "factions", id);
     const unsubFaction = onSnapshot(factionRef, (snapshot) => {
-      if (snapshot.exists()) {
+      if (snapshot.exists() && snapshot.data().campaignId === currentCampaign.id) {
         const data = { id: snapshot.id, ...snapshot.data() };
         setFaction(data);
         setEditFaction({
@@ -55,26 +57,36 @@ function FactionDetails() {
     });
 
     return () => unsubFaction();
-  }, [id]);
+  }, [currentCampaign?.id, id]);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !currentCampaign?.id) return undefined;
 
-    const membersQuery = query(collection(db, "players"), where("factionId", "==", id));
+    const membersQuery = query(
+      collection(db, "players"),
+      where("campaignId", "==", currentCampaign.id),
+      where("factionId", "==", id)
+    );
     const unsubMembers = onSnapshot(membersQuery, (snapshot) => {
       setMembers(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     });
 
     return () => unsubMembers();
-  }, [id]);
+  }, [currentCampaign?.id, id]);
 
   useEffect(() => {
-    const unsubPlayers = onSnapshot(collection(db, "players"), (snapshot) => {
+    if (!currentCampaign?.id) {
+      setPlayers([]);
+      return undefined;
+    }
+
+    const playersQuery = query(collection(db, "players"), where("campaignId", "==", currentCampaign.id));
+    const unsubPlayers = onSnapshot(playersQuery, (snapshot) => {
       setPlayers(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     });
 
     return () => unsubPlayers();
-  }, []);
+  }, [currentCampaign?.id]);
 
   const handleAssignPlayer = async (player) => {
     if (player.factionId === id) return;
@@ -83,6 +95,7 @@ function FactionDetails() {
       const playerRef = doc(db, "players", player.id);
       await updateDoc(playerRef, {
         factionId: id,
+        campaignId: currentCampaign.id,
       });
       setShowModal(false);
     } catch (error) {
@@ -95,6 +108,7 @@ function FactionDetails() {
       const playerRef = doc(db, "players", playerId);
       await updateDoc(playerRef, {
         factionId: "",
+        campaignId: currentCampaign.id,
       });
     } catch (error) {
       console.error("Erro ao remover personagem:", error);
@@ -113,6 +127,7 @@ function FactionDetails() {
       await updateDoc(factionRef, {
         ...editFaction,
         imagem: imageUrl,
+        campaignId: currentCampaign.id,
       });
       setShowEditModal(false);
       setImagemArquivoFaction(null);
@@ -135,12 +150,16 @@ function FactionDetails() {
         <div className="action-bar">
           <button className="btn-back" onClick={() => navigate("/factions")}>← Voltar para Facções</button>
           <div className="action-buttons-row">
-            <button className="btn-add-main" onClick={() => setShowEditModal(true)}>
-              Editar Facção
-            </button>
-            <button className="btn-add-main" onClick={() => setShowModal(true)}>
-              Adicionar Personagem
-            </button>
+            {hasPermission("editFactions") && (
+              <button className="btn-add-main" onClick={() => setShowEditModal(true)}>
+                Editar Facção
+              </button>
+            )}
+            {hasPermission("editCharacters") && (
+              <button className="btn-add-main" onClick={() => setShowModal(true)}>
+                Adicionar Personagem
+              </button>
+            )}
           </div>
         </div>
       </div>

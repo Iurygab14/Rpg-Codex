@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { db } from "../firebaseConfig";
-import { addDoc, collection, deleteDoc, doc, onSnapshot } from "firebase/firestore";
+import { addDoc, collection, deleteDoc, doc, onSnapshot, query, where } from "firebase/firestore";
 import "../assets/worldMap.css";
+import { useCampaign } from "../context/CampaignContext.jsx";
 
 function WorldMap() {
   const routerLocation = useLocation();
+  const { currentCampaign, hasPermission } = useCampaign();
   const [markers, setMarkers] = useState([]);
   const [locations, setLocations] = useState([]);
   const [pointsOfInterest, setPointsOfInterest] = useState([]);
@@ -26,28 +28,35 @@ function WorldMap() {
   }, [routerLocation.state]);
 
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, "mapMarkers"), (snapshot) => {
+    if (!currentCampaign?.id) {
+      setMarkers([]);
+      setLocations([]);
+      setPointsOfInterest([]);
+      return undefined;
+    }
+
+    const markersQuery = query(collection(db, "mapMarkers"), where("campaignId", "==", currentCampaign.id));
+    const locationsQuery = query(collection(db, "locations"), where("campaignId", "==", currentCampaign.id));
+    const pointsQuery = query(collection(db, "pointsOfInterest"), where("campaignId", "==", currentCampaign.id));
+
+    const unsubMarkers = onSnapshot(markersQuery, (snapshot) => {
       setMarkers(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     });
 
-    return () => unsub();
-  }, []);
-
-  useEffect(() => {
-    const unsub = onSnapshot(collection(db, "locations"), (snapshot) => {
+    const unsubLocations = onSnapshot(locationsQuery, (snapshot) => {
       setLocations(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     });
 
-    return () => unsub();
-  }, []);
-
-  useEffect(() => {
-    const unsub = onSnapshot(collection(db, "pointsOfInterest"), (snapshot) => {
+    const unsubPoints = onSnapshot(pointsQuery, (snapshot) => {
       setPointsOfInterest(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     });
 
-    return () => unsub();
-  }, []);
+    return () => {
+      unsubMarkers();
+      unsubLocations();
+      unsubPoints();
+    };
+  }, [currentCampaign?.id]);
 
   const positioningLocation = locations.find((location) => location.id === positioningLocationId) || null;
   const selectedLocation = selectedMarker
@@ -110,6 +119,7 @@ function WorldMap() {
         locationId: positioningLocationId,
         x: Number(x.toFixed(2)),
         y: Number(y.toFixed(2)),
+        campaignId: currentCampaign.id,
       });
 
       setNewMarkerPosition({ x: Number(x.toFixed(2)), y: Number(y.toFixed(2)) });
@@ -151,7 +161,7 @@ function WorldMap() {
           </div>
           <div className="worldmap-actions">
             <span>{markers.length} marcadores no mapa</span>
-            {positioningMode && (
+            {positioningMode && hasPermission("editMap") && (
               <button className="worldmap-btn secondary" onClick={cancelPositioning}>
                 Cancelar posicionamento
               </button>
@@ -271,11 +281,13 @@ function WorldMap() {
               )}
             </section>
 
-            <div className="panel-actions">
-              <button className="worldmap-btn secondary" onClick={handleDeleteMarker}>
-                Remover marcador
-              </button>
-            </div>
+            {hasPermission("editMap") && (
+              <div className="panel-actions">
+                <button className="worldmap-btn secondary" onClick={handleDeleteMarker}>
+                  Remover marcador
+                </button>
+              </div>
+            )}
 
             {errorMessage && <p className="panel-error">{errorMessage}</p>}
           </>
@@ -290,13 +302,15 @@ function WorldMap() {
                 <ul className="linked-location-list">
                   {unpositionedLocations.map((location) => (
                     <li key={location.id}>
-                      <button
-                        type="button"
-                        className="worldmap-btn small"
-                        onClick={() => startPositioningLocation(location.id)}
-                      >
-                        Posicionar {location.nome}
-                      </button>
+                      {hasPermission("editMap") && (
+                        <button
+                          type="button"
+                          className="worldmap-btn small"
+                          onClick={() => startPositioningLocation(location.id)}
+                        >
+                          Posicionar {location.nome}
+                        </button>
+                      )}
                     </li>
                   ))}
                 </ul>

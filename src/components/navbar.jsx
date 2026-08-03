@@ -4,7 +4,7 @@ import "../assets/Link.css";
 
 function Navbar() {
   const links = [
-    { to: "/", label: "Início" },
+    { to: "/home", label: "Início" },
     { to: "/characters", label: "Personagens" },
     { to: "/factions", label: "Facções" },
     { to: "/locations", label: "Locais" },

@@ -2,9 +2,11 @@ import "../assets/characterCard.css";
 import { useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig.js";
 import { doc, deleteDoc } from "firebase/firestore"; 
+import { useCampaign } from "../context/CampaignContext.jsx";
 
 function CharacterCard({ player, onEdit, onRemoveFromFaction }) {
   const navigate = useNavigate();
+  const { hasPermission } = useCampaign();
 
   const handleExcluir = async () => {
     const confirmar = window.confirm(`Deseja mesmo excluir ${player.nome}?`);
@@ -22,38 +24,44 @@ function CharacterCard({ player, onEdit, onRemoveFromFaction }) {
     <div className="character-card" onClick={() => navigate(`/characters/${player.id}`)}>
       <div className="card-actions">
         {onRemoveFromFaction ? (
-          <button
-            className="btn-delete"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRemoveFromFaction(player.id);
-            }}
-            title="Remover da Facção"
-          >
-            Remover
-          </button>
-        ) : (
-          <>
-            <button
-              className="btn-edit"
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit(player);
-              }}
-              title="Editar"
-            >
-              ✏️
-            </button>
+          hasPermission("editFactions") && (
             <button
               className="btn-delete"
               onClick={(e) => {
                 e.stopPropagation();
-                handleExcluir();
+                onRemoveFromFaction(player.id);
               }}
-              title="Excluir"
+              title="Remover da Facção"
             >
-              🗑️
+              Remover
             </button>
+          )
+        ) : (
+          <>
+            {hasPermission("editCharacters") && (
+              <button
+                className="btn-edit"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit(player);
+                }}
+                title="Editar"
+              >
+                ✏️
+              </button>
+            )}
+            {hasPermission("deleteCharacters") && (
+              <button
+                className="btn-delete"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleExcluir();
+                }}
+                title="Excluir"
+              >
+                🗑️
+              </button>
+            )}
           </>
         )}
       </div>

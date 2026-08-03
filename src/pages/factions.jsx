@@ -7,12 +7,16 @@ import {
   doc,
   updateDoc,
   serverTimestamp,
+  query,
+  where,
 } from "firebase/firestore";
 import { uploadImage } from "../services/cloudinary";
 import FactionCard from "../components/FactionCard.jsx";
 import "../assets/factions.css";
+import { useCampaign } from "../context/CampaignContext.jsx";
 
 function Factions() {
+  const { currentCampaign, hasPermission } = useCampaign();
   const [lista, setLista] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -29,13 +33,19 @@ function Factions() {
   });
 
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, "factions"), (snapshot) => {
+    if (!currentCampaign?.id) {
+      setLista([]);
+      return undefined;
+    }
+
+    const factionsQuery = query(collection(db, "factions"), where("campaignId", "==", currentCampaign.id));
+    const unsub = onSnapshot(factionsQuery, (snapshot) => {
       const dados = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setLista(dados);
     });
 
     return () => unsub();
-  }, []);
+  }, [currentCampaign?.id]);
 
   const handleOpenEdit = (faction) => {
     setNovaFaction(faction);
@@ -70,6 +80,7 @@ function Factions() {
     const dadosParaSalvar = {
       ...novaFaction,
       imagem: imageUrl,
+      campaignId: currentCampaign.id,
     };
 
     delete dadosParaSalvar.id;
@@ -90,9 +101,11 @@ function Factions() {
     <div className="page-container">
       <div className="header-actions-faction">
         <div className="action-bar">
-          <button className="btn-add-main" onClick={() => setShowModal(true)}>
-            + Nova Facção
-          </button>
+          {hasPermission("createFactions") && (
+            <button className="btn-add-main" onClick={() => setShowModal(true)}>
+              + Nova Facção
+            </button>
+          )}
 
           <div className="search-container-faction">
             <div className="filter-header-faction">

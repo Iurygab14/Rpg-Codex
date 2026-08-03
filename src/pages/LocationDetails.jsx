@@ -14,9 +14,11 @@ import {
 } from "firebase/firestore";
 import { uploadImage } from "../services/cloudinary";
 import "../assets/locations.css";
+import { useCampaign } from "../context/CampaignContext.jsx";
 
 function LocationDetails() {
   const { id } = useParams();
+  const { currentCampaign, hasPermission } = useCampaign();
   const navigate = useNavigate();
   const [location, setLocation] = useState(null);
   const [points, setPoints] = useState([]);
@@ -29,22 +31,30 @@ function LocationDetails() {
   const [editingPoint, setEditingPoint] = useState(null);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !currentCampaign?.id) return undefined;
     const locationRef = doc(db, "locations", id);
     const unsub = onSnapshot(locationRef, (snapshot) => {
-      setLocation({ id: snapshot.id, ...snapshot.data() });
+      if (snapshot.exists() && snapshot.data().campaignId === currentCampaign.id) {
+        setLocation({ id: snapshot.id, ...snapshot.data() });
+      } else {
+        setLocation(null);
+      }
     });
     return () => unsub();
-  }, [id]);
+  }, [currentCampaign?.id, id]);
 
   useEffect(() => {
-    if (!id) return;
-    const q = query(collection(db, "pointsOfInterest"), where("locationId", "==", id));
+    if (!id || !currentCampaign?.id) return undefined;
+    const q = query(
+      collection(db, "pointsOfInterest"),
+      where("campaignId", "==", currentCampaign.id),
+      where("locationId", "==", id)
+    );
     const unsub = onSnapshot(q, (snapshot) => {
       setPoints(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     });
     return () => unsub();
-  }, [id]);
+  }, [currentCampaign?.id, id]);
 
   const closePointModal = () => {
     setShowModal(false);
@@ -94,6 +104,7 @@ function LocationDetails() {
         nome: novoPoint.nome.trim(),
         descricao: novoPoint.descricao.trim(),
         imagem: imageUrl,
+        campaignId: currentCampaign.id,
       });
     } else {
       await addDoc(collection(db, "pointsOfInterest"), {
@@ -101,6 +112,7 @@ function LocationDetails() {
         descricao: novoPoint.descricao.trim(),
         imagem: imageUrl,
         locationId: id,
+        campaignId: currentCampaign.id,
         criadoEm: serverTimestamp(),
       });
     }
@@ -129,6 +141,7 @@ function LocationDetails() {
       nome: editLocationData.nome.trim(),
       descricao: editLocationData.descricao.trim(),
       imagem: imageUrl,
+      campaignId: currentCampaign.id,
     });
 
     setShowLocationEditModal(false);
@@ -144,12 +157,16 @@ function LocationDetails() {
         <div className="action-bar">
           <button className="btn-back" onClick={() => navigate("/locations")}>← Voltar para Localizações</button>
           <div className="action-buttons-row">
-            <button className="btn-add-main" onClick={openEditLocationModal}>
-              Editar Localização
-            </button>
-            <button className="btn-add-main" onClick={openNewPointModal}>
-              + Adicionar Localização
-            </button>
+            {hasPermission("editLocations") && (
+              <button className="btn-add-main" onClick={openEditLocationModal}>
+                Editar Localização
+              </button>
+            )}
+            {hasPermission("createLocations") && (
+              <button className="btn-add-main" onClick={openNewPointModal}>
+                + Adicionar Localização
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -189,12 +206,16 @@ function LocationDetails() {
                     <p>{point.descricao}</p>
                   </div>
                   <div className="point-card-actions">
-                    <button type="button" className="btn-edit" onClick={() => openEditPointModal(point)}>
-                      ✏️
-                    </button>
-                    <button type="button" className="btn-delete" onClick={() => handleDeletePoint(point.id)}>
-                      🗑️
-                    </button>
+                    {hasPermission("editLocations") && (
+                      <button type="button" className="btn-edit" onClick={() => openEditPointModal(point)}>
+                        ✏️
+                      </button>
+                    )}
+                    {hasPermission("deleteLocations") && (
+                      <button type="button" className="btn-delete" onClick={() => handleDeletePoint(point.id)}>
+                        🗑️
+                      </button>
+                    )}
                   </div>
                 </div>
               </li>

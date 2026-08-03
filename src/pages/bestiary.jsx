@@ -3,10 +3,12 @@ import { db } from "../firebaseConfig";
 import { uploadImage } from "../services/cloudinary";
 import "../assets/bestiary.css";
 import BestiaryCard from "../components/bestiaryCard.jsx";
-import { collection, onSnapshot, addDoc, updateDoc, doc, serverTimestamp } from "firebase/firestore";
+import { collection, onSnapshot, addDoc, updateDoc, doc, serverTimestamp, query, where } from "firebase/firestore";
+import { useCampaign } from "../context/CampaignContext.jsx";
 
 function Bestiary() {
 
+  const { currentCampaign, hasPermission } = useCampaign();
   const [lista, setLista] = useState([]);
 
   const [showModal, setShowModal] = useState(false);
@@ -30,8 +32,14 @@ function Bestiary() {
 
   useEffect(() => {
 
+    if (!currentCampaign?.id) {
+      setLista([]);
+      return undefined;
+    }
+
+    const bestiaryQuery = query(collection(db, "bestiary"), where("campaignId", "==", currentCampaign.id));
     const unsub = onSnapshot(
-      collection(db, "bestiary"),
+      bestiaryQuery,
       (snapshot) => {
 
         const dados = snapshot.docs.map(doc => ({
@@ -45,7 +53,7 @@ function Bestiary() {
 
     return () => unsub();
 
-  }, []);
+  }, [currentCampaign?.id]);
 
   const fecharModal = () => {
 
@@ -82,7 +90,8 @@ function Bestiary() {
 
     const dadosParaSalvar = {
         ...novaCriatura,
-        imagem: imageUrl
+        imagem: imageUrl,
+        campaignId: currentCampaign.id
     };
 
     delete dadosParaSalvar.id;
@@ -128,12 +137,14 @@ function Bestiary() {
 
         <div className="action-bar">
 
+            {hasPermission("createCharacters") && (
             <button
             className="btn-add-main"
             onClick={() => setShowModal(true)}
             >
             + Nova Criatura
             </button>
+            )}
 
             <div className="search-container-best">
 

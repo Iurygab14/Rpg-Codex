@@ -3,37 +3,40 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { db } from "../firebaseConfig.js";
 import { collection, doc, onSnapshot, query, where } from "firebase/firestore";
 import "../assets/missions.css";
+import { useCampaign } from "../context/CampaignContext.jsx";
 
 function CharacterDetails() {
   const { id } = useParams();
+  const { currentCampaign } = useCampaign();
   const navigate = useNavigate();
   const [character, setCharacter] = useState(null);
   const [relatedMissions, setRelatedMissions] = useState([]);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !currentCampaign?.id) return undefined;
     const charRef = doc(db, "players", id);
     const unsub = onSnapshot(charRef, (snapshot) => {
-      if (snapshot.exists()) {
+      if (snapshot.exists() && snapshot.data().campaignId === currentCampaign.id) {
         setCharacter({ id: snapshot.id, ...snapshot.data() });
       } else {
         setCharacter(null);
       }
     });
     return () => unsub();
-  }, [id]);
+  }, [currentCampaign?.id, id]);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !currentCampaign?.id) return undefined;
     const missionsQuery = query(
       collection(db, "missions"),
+      where("campaignId", "==", currentCampaign.id),
       where("personagens", "array-contains", id)
     );
     const unsub = onSnapshot(missionsQuery, (snapshot) => {
       setRelatedMissions(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     });
     return () => unsub();
-  }, [id]);
+  }, [currentCampaign?.id, id]);
 
   if (!character) {
     return (

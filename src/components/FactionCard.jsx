@@ -2,9 +2,11 @@ import { useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig.js";
 import { doc, deleteDoc } from "firebase/firestore";
 import "../assets/factionCard.css";
+import { useCampaign } from "../context/CampaignContext.jsx";
 
 function FactionCard({ faction, onEdit }) {
   const navigate = useNavigate();
+  const { hasPermission } = useCampaign();
 
   const handleExcluir = async () => {
     const confirmar = window.confirm(`Deseja mesmo excluir ${faction.nome}?`);
@@ -21,7 +23,7 @@ function FactionCard({ faction, onEdit }) {
   return (
     <div className="faction-card" onClick={() => navigate(`/factions/${faction.id}`)}>
       <div className="card-actions">
-        {onEdit && (
+        {onEdit && hasPermission("editFactions") && (
           <button
             className="btn-edit"
             onClick={(e) => {
@@ -33,16 +35,18 @@ function FactionCard({ faction, onEdit }) {
             ✏️
           </button>
         )}
-        <button
-          className="btn-delete"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleExcluir();
-          }}
-          title="Excluir"
-        >
-          🗑️
-        </button>
+        {hasPermission("deleteFactions") && (
+          <button
+            className="btn-delete"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleExcluir();
+            }}
+            title="Excluir"
+          >
+            🗑️
+          </button>
+        )}
       </div>
 
       <img

@@ -2,9 +2,11 @@ import { useNavigate } from "react-router-dom";
 import { db } from "../firebaseConfig.js";
 import { doc, deleteDoc } from "firebase/firestore";
 import "../assets/missions.css";
+import { useCampaign } from "../context/CampaignContext.jsx";
 
 function MissionCard({ mission, onEdit }) {
   const navigate = useNavigate();
+  const { hasPermission } = useCampaign();
 
   const handleExcluir = async (e) => {
     e.stopPropagation();

@@ -3,29 +3,34 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { db } from "../firebaseConfig.js";
 import { doc, onSnapshot, getDoc } from "firebase/firestore";
 import "../assets/missions.css";
+import { useCampaign } from "../context/CampaignContext.jsx";
 
 function MissionDetails() {
   const { id } = useParams();
+  const { currentCampaign } = useCampaign();
   const navigate = useNavigate();
   const [mission, setMission] = useState(null);
   const [relatedCharacters, setRelatedCharacters] = useState([]);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || !currentCampaign?.id) return undefined;
     const missionRef = doc(db, "missions", id);
     const unsub = onSnapshot(missionRef, (snapshot) => {
-      if (snapshot.exists()) {
+      if (snapshot.exists() && snapshot.data().campaignId === currentCampaign.id) {
         setMission({ id: snapshot.id, ...snapshot.data() });
       } else {
         setMission(null);
       }
     });
     return () => unsub();
-  }, [id]);
+  }, [currentCampaign?.id, id]);
 
   useEffect(() => {
     const loadRelated = async () => {
-      if (!mission) return;
+      if (!mission || !currentCampaign?.id) {
+        setRelatedCharacters([]);
+        return;
+      }
 
       const characterPromises = (mission.personagens || []).map((charId) =>
         getDoc(doc(db, "players", charId))
@@ -34,13 +39,13 @@ function MissionDetails() {
       const characterDocs = await Promise.all(characterPromises);
       setRelatedCharacters(
         characterDocs
-          .filter((doc) => doc.exists())
+          .filter((doc) => doc.exists() && doc.data().campaignId === currentCampaign.id)
           .map((doc) => ({ id: doc.id, ...doc.data() }))
       );
     };
 
     loadRelated();
-  }, [mission]);
+  }, [currentCampaign?.id, mission]);
 
   if (!mission) {
     return (

@@ -1,18 +1,31 @@
 import { useEffect, useState } from "react";
 import { db } from "../firebaseConfig";
-import { collection, onSnapshot } from "firebase/firestore";
+import { collection, onSnapshot, query, where } from "firebase/firestore";
 import "../assets/home.css";
+import { useCampaign } from "../context/CampaignContext.jsx";
 
 function Home() {
+    const { currentCampaign } = useCampaign();
     const [characters, setCharacters] = useState([]);
     const [locations, setLocations] = useState([]);
     const [missions, setMissions] = useState([]);
     const [bestiary, setBestiary] = useState([]);
 
     useEffect(() => {
-        const unsubPlayers = onSnapshot(
-            collection(db, "players"),
-            (snapshot) => {
+        if (!currentCampaign?.id) {
+            setCharacters([]);
+            setLocations([]);
+            setMissions([]);
+            setBestiary([]);
+            return undefined;
+        }
+
+        const playersQuery = query(collection(db, "players"), where("campaignId", "==", currentCampaign.id));
+        const locationsQuery = query(collection(db, "locations"), where("campaignId", "==", currentCampaign.id));
+        const missionsQuery = query(collection(db, "missions"), where("campaignId", "==", currentCampaign.id));
+        const bestiaryQuery = query(collection(db, "bestiary"), where("campaignId", "==", currentCampaign.id));
+
+        const unsubPlayers = onSnapshot(playersQuery, (snapshot) => {
                 setCharacters(
                     snapshot.docs.map(doc => ({
                         id: doc.id,
@@ -22,9 +35,7 @@ function Home() {
             }
         );
 
-        const unsubLocations = onSnapshot(
-            collection(db, "locations"),
-            (snapshot) => {
+        const unsubLocations = onSnapshot(locationsQuery, (snapshot) => {
                 setLocations(
                     snapshot.docs.map(doc => ({
                         id: doc.id,
@@ -34,9 +45,7 @@ function Home() {
             }
         );
 
-        const unsubMissions = onSnapshot(
-            collection(db, "missions"),
-            (snapshot) => {
+        const unsubMissions = onSnapshot(missionsQuery, (snapshot) => {
                 setMissions(
                     snapshot.docs.map(doc => ({
                         id: doc.id,
@@ -46,9 +55,7 @@ function Home() {
             }
         );
 
-        const unsubBestiary = onSnapshot(
-            collection(db, "bestiary"),
-            (snapshot) => {
+        const unsubBestiary = onSnapshot(bestiaryQuery, (snapshot) => {
                 setBestiary(
                     snapshot.docs.map(doc => ({
                         id: doc.id,
@@ -64,7 +71,7 @@ function Home() {
             unsubMissions();
             unsubBestiary();
         };
-    }, []);
+    }, [currentCampaign?.id]);
 
     const ultimosPersonagens = [...characters]
         .filter(char => char.criadoEm)

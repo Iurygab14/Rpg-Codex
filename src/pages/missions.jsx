@@ -7,12 +7,16 @@ import {
   doc,
   updateDoc,
   serverTimestamp,
+  query,
+  where,
 } from "firebase/firestore";
 import { uploadImage, uploadPdf } from "../services/cloudinary";
 import MissionCard from "../components/MissionCard.jsx";
 import "../assets/missions.css";
+import { useCampaign } from "../context/CampaignContext.jsx";
 
 function Missions() {
+  const { currentCampaign, hasPermission } = useCampaign();
   const [missions, setMissions] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -37,20 +41,32 @@ function Missions() {
   });
 
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, "missions"), (snapshot) => {
+    if (!currentCampaign?.id) {
+      setMissions([]);
+      return undefined;
+    }
+
+    const missionsQuery = query(collection(db, "missions"), where("campaignId", "==", currentCampaign.id));
+    const unsub = onSnapshot(missionsQuery, (snapshot) => {
       const dados = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       setMissions(dados);
     });
     return () => unsub();
-  }, []);
+  }, [currentCampaign?.id]);
 
   useEffect(() => {
-    const unsubPlayers = onSnapshot(collection(db, "players"), (snapshot) => {
+    if (!currentCampaign?.id) {
+      setPlayers([]);
+      return undefined;
+    }
+
+    const playersQuery = query(collection(db, "players"), where("campaignId", "==", currentCampaign.id));
+    const unsubPlayers = onSnapshot(playersQuery, (snapshot) => {
       setPlayers(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
     });
 
     return () => unsubPlayers();
-  }, []);
+  }, [currentCampaign?.id]);
 
   const handleOpenEdit = (mission) => {
     setNovaMissao({
@@ -155,6 +171,7 @@ function Missions() {
       relatorioUrl: pdfUrl,
       relatorioNome: pdfNome,
       xp: xpValue,
+      campaignId: currentCampaign.id,
     };
 
     delete dadosParaSalvar.id;
@@ -200,9 +217,11 @@ function Missions() {
     <div className="page-container">
       <div className="header-actions-mission">
         <div className="mission-actions">
-          <button className="btn-add-main" onClick={() => setShowModal(true)}>
-            + Nova Missão
-          </button>
+          {hasPermission("createMissions") && (
+            <button className="btn-add-main" onClick={() => setShowModal(true)}>
+              + Nova Missão
+            </button>
+          )}
           <div className="search-container-mission">
             <div className="filter-header-mission">Filtros de busca</div>
             <div className="filter-inputs-mission">
