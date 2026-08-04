@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
-  addDoc,
   collection,
-  deleteDoc,
   doc,
   onSnapshot,
   query,
@@ -12,7 +10,8 @@ import {
 } from "firebase/firestore";
 import { db } from "../firebaseConfig.js";
 import { useCampaign } from "../context/CampaignContext.jsx";
-import "../assets/factions.css";
+import { uploadImage } from "../services/cloudinary.js";
+import "../assets/campaigns.css";
 
 function CampaignDetails() {
   const { id } = useParams();
@@ -31,9 +30,12 @@ function CampaignDetails() {
   const [members, setMembers] = useState([]);
   const [users, setUsers] = useState([]);
   const [showMemberModal, setShowMemberModal] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
+  const [inviteSearch, setInviteSearch] = useState("");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("player");
   const [showEditModal, setShowEditModal] = useState(false);
+  const [uploadingCampaignAsset, setUploadingCampaignAsset] = useState(false);
   const [editCampaignData, setEditCampaignData] = useState({
     nome: "",
     descricao: "",
@@ -78,7 +80,7 @@ function CampaignDetails() {
 
   const memberDetails = useMemo(() => {
     return members.map((member) => {
-      const profile = users.find((user) => user.userId === member.userId || user.id === member.userId);
+      const profile = users.find((user) => user.uid === member.userId || user.id === member.userId);
       return {
         ...member,
         profile,
@@ -86,15 +88,59 @@ function CampaignDetails() {
     });
   }, [members, users]);
 
+  const filteredUsers = useMemo(() => {
+    const searchTerm = inviteSearch.trim().toLowerCase();
+    if (!searchTerm) {
+      return users;
+    }
+
+    return users.filter((user) => {
+      const nome = (user.nome || "").toLowerCase();
+      const email = (user.email || "").toLowerCase();
+      return nome.includes(searchTerm) || email.includes(searchTerm);
+    });
+  }, [inviteSearch, users]);
+
   const handleInviteMember = async (event) => {
     event.preventDefault();
 
     if (!inviteEmail.trim()) return;
 
-    await inviteMember(inviteEmail, inviteRole);
+    const result = await inviteMember(inviteEmail, inviteRole);
+    if (!result?.ok) {
+      if (result?.reason === "already_member") {
+        window.alert("Este usuário já participa da campanha.");
+      } else if (result?.reason === "invite_pending") {
+        window.alert("Já existe um convite pendente para este usuário.");
+      } else if (result?.reason === "user_not_found") {
+        window.alert("Nenhum usuário cadastrado foi encontrado com este e-mail.");
+      } else {
+        window.alert("Não foi possível enviar o convite.");
+      }
+      return;
+    }
+
     setInviteEmail("");
+    setInviteSearch("");
     setInviteRole("player");
     setShowMemberModal(false);
+  };
+
+  const handleCampaignAssetUpload = async (event, fieldName) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    try {
+      setUploadingCampaignAsset(true);
+      const url = await uploadImage(file);
+      setEditCampaignData((current) => ({ ...current, [fieldName]: url }));
+    } catch (error) {
+      window.alert(error?.message || "Não foi possível enviar o arquivo da campanha.");
+    } finally {
+      setUploadingCampaignAsset(false);
+    }
   };
 
   const handleSaveCampaign = async (event) => {
@@ -118,112 +164,143 @@ function CampaignDetails() {
   };
 
   const canManageMembers = hasPermission("inviteMembers") || hasPermission("changeMemberRoles") || hasPermission("removeMembers");
+  const canDeleteCampaign = currentRole === "owner" && currentCampaign?.ownerId === currentUserId;
+
+  const handleRemoveMember = async (memberId) => {
+    const confirmation = window.confirm("Deseja remover este membro da campanha?");
+    if (!confirmation) {
+      return;
+    }
+
+    await removeMember(memberId);
+  };
 
   if (!campaign) {
-    return <div className="page-container"><p>Campanha não encontrada.</p></div>;
+    return <div className="campaigns-page"><p className="campaigns-empty">Campanha não encontrada.</p></div>;
   }
 
   return (
-    <div className="page-container">
-      <div className="header-actions-faction">
-        <div className="action-bar">
-          <button className="btn-back" onClick={() => navigate("/")}>← Voltar para campanhas</button>
-          <div className="action-buttons-row">
-            {hasPermission("editCampaign") && (
-              <button className="btn-add-main" onClick={() => setShowEditModal(true)}>
-                Editar Campanha
-              </button>
-            )}
-            {hasPermission("deleteCampaign") && (
-              <button className="btn-delete" onClick={handleDeleteCampaign}>
-                Excluir Campanha
-              </button>
-            )}
-            {canManageMembers && (
-              <button className="btn-add-main" onClick={() => setShowMemberModal(true)}>
-                Convidar membro
-              </button>
-            )}
-          </div>
+    <div className="campaigns-page">
+      <div className="campaigns-toolbar">
+        <button className="btn-back" onClick={() => navigate("/")}>← Voltar para campanhas</button>
+        <div className="campaigns-actions-wrap">
+          {hasPermission("editCampaign") && (
+            <button className="btn-add-main" onClick={() => setShowEditModal(true)}>
+              Editar Campanha
+            </button>
+          )}
+          {canDeleteCampaign && (
+            <button className="btn-delete" onClick={handleDeleteCampaign}>
+              Excluir Campanha
+            </button>
+          )}
+          {canManageMembers && (
+            <button className="btn-add-main" onClick={() => setShowMemberModal(true)}>
+              Convidar membro
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="faction-detail-card">
-        {campaign.imagem && <img src={campaign.imagem} alt={campaign.nome} className="faction-detail-image" />}
-        <div className="faction-detail-info">
+      <section className="campaign-detail-panel">
+        {campaign.imagem && <img src={campaign.imagem} alt={campaign.nome} className="campaign-detail-image" />}
+        <div className="campaign-detail-summary">
           <h1>{campaign.nome}</h1>
           <p>{campaign.descricao || "Sem descrição."}</p>
-          <div className="detail-row">
-            <div>
+          <div className="campaign-detail-meta">
+            <div className="meta-card">
               <span>Mapa principal</span>
               <p>{campaign.mapaPrincipal || "—"}</p>
             </div>
-            <div>
+            <div className="meta-card">
               <span>Owner</span>
               <p>{campaign.ownerId || currentUserId}</p>
             </div>
-          </div>
-          <div className="detail-row">
-            <span>Cargo atual</span>
-            <p>{currentRole}</p>
+            <div className="meta-card">
+              <span>Cargo atual</span>
+              <p>{currentRole}</p>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <section className="members-section">
-        <h2>Membros da Campanha</h2>
-        {memberDetails.length === 0 ? (
-          <p className="empty-state">Nenhum membro cadastrado ainda.</p>
-        ) : (
-          <div className="members-grid">
-            {memberDetails.map((member) => {
-              const profile = member.profile || {};
-              return (
-                <div key={member.id} className="character-card">
-                  <div className="card-actions">
-                    {hasPermission("changeMemberRoles") && member.role !== "owner" && (
-                      <select
-                        value={member.role}
-                        onChange={async (event) => {
-                          await updateMemberRole(member.id, event.target.value);
-                        }}
-                        className="search-input-char"
-                      >
-                        <option value="owner">Owner</option>
-                        <option value="admin">Admin</option>
-                        <option value="player">Player</option>
-                        <option value="viewer">Viewer</option>
-                      </select>
-                    )}
-                    {hasPermission("removeMembers") && member.role !== "owner" && (
-                      <button
-                        className="btn-delete"
-                        onClick={async () => {
-                          await removeMember(member.id);
-                        }}
-                        title="Remover membro"
-                      >
-                        Remover
-                      </button>
-                    )}
-                  </div>
+      <section className="campaigns-members-section">
+        <div className="campaign-tabs">
+          <button
+            type="button"
+            className={`campaign-tab ${activeTab === "overview" ? "active" : ""}`}
+            onClick={() => setActiveTab("overview")}
+          >
+            Resumo
+          </button>
+          <button
+            type="button"
+            className={`campaign-tab ${activeTab === "members" ? "active" : ""}`}
+            onClick={() => setActiveTab("members")}
+          >
+            Membros
+          </button>
+        </div>
 
-                  <img
-                    src={profile.imagem || "https://placehold.co/200x200?text=Usuário"}
-                    alt={profile.nome || "Usuário"}
-                    className="char-image"
-                  />
-                  <div className="char-info">
-                    <div className="char-details">
-                      <h3>{profile.nome || "Usuário"}</h3>
-                      <p><strong>Email:</strong> {profile.email || "Sem email"}</p>
-                      <p><strong>Cargo:</strong> {member.role}</p>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+        {activeTab === "overview" ? (
+          <div className="campaign-overview-panel">
+            <h2>Detalhes da campanha</h2>
+            <p className="campaigns-empty">Use a aba de membros para visualizar o elenco, alterar cargos e gerenciar acesso.</p>
           </div>
+        ) : (
+          <>
+            <h2>Membros da Campanha</h2>
+            {memberDetails.length === 0 ? (
+              <p className="campaigns-empty">Nenhum membro cadastrado ainda.</p>
+            ) : (
+              <div className="campaigns-grid">
+                {memberDetails.map((member) => {
+                  const profile = member.profile || {};
+                  return (
+                    <article key={member.id} className="campaign-member-card">
+                      <img
+                        src={profile.foto || profile.imagem || "https://placehold.co/200x200?text=Usuário"}
+                        alt={profile.nome || "Usuário"}
+                        className="char-image"
+                      />
+                      <div className="char-info">
+                        <div className="char-details">
+                          <h3>{profile.nome || "Usuário"}</h3>
+                          <p><strong>Email:</strong> {profile.email || "Sem email"}</p>
+                          <p><strong>Cargo:</strong> {member.role}</p>
+                        </div>
+                        <div className="card-actions">
+                          {hasPermission("changeMemberRoles") && member.role !== "owner" && (
+                            <select
+                              value={member.role}
+                              onChange={async (event) => {
+                                await updateMemberRole(member.id, event.target.value);
+                              }}
+                              className="search-input-char"
+                            >
+                              <option value="owner">Owner</option>
+                              <option value="admin">Admin</option>
+                              <option value="player">Player</option>
+                              <option value="viewer">Viewer</option>
+                            </select>
+                          )}
+                          {hasPermission("removeMembers") && member.role !== "owner" && (
+                            <button
+                              className="btn-delete"
+                              onClick={() => handleRemoveMember(member.id)}
+                              title="Remover membro"
+                            >
+                              Remover
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </>
         )}
       </section>
 
@@ -233,6 +310,27 @@ function CampaignDetails() {
             <button className="btn-close" onClick={() => setShowMemberModal(false)}>X</button>
             <h3>Convidar membro</h3>
             <form onSubmit={handleInviteMember}>
+              <input
+                placeholder="Buscar por nome ou e-mail"
+                value={inviteSearch}
+                onChange={(event) => setInviteSearch(event.target.value)}
+              />
+              <div className="campaign-member-search-list">
+                {filteredUsers.map((user) => (
+                  <button
+                    key={user.id}
+                    type="button"
+                    className="campaign-member-search-item"
+                    onClick={() => {
+                      setInviteEmail(user.email || "");
+                      setInviteSearch(user.nome || user.email || "");
+                    }}
+                  >
+                    <span>{user.nome || "Usuário"}</span>
+                    <small>{user.email || "Sem e-mail"}</small>
+                  </button>
+                ))}
+              </div>
               <input
                 placeholder="E-mail do usuário"
                 value={inviteEmail}
@@ -269,16 +367,24 @@ function CampaignDetails() {
                 onChange={(event) => setEditCampaignData({ ...editCampaignData, descricao: event.target.value })}
                 required
               />
-              <input
-                placeholder="Imagem de capa"
-                value={editCampaignData.imagem}
-                onChange={(event) => setEditCampaignData({ ...editCampaignData, imagem: event.target.value })}
-              />
-              <input
-                placeholder="Mapa principal"
-                value={editCampaignData.mapaPrincipal}
-                onChange={(event) => setEditCampaignData({ ...editCampaignData, mapaPrincipal: event.target.value })}
-              />
+              <label>
+                Imagem de capa
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => handleCampaignAssetUpload(event, "imagem")}
+                />
+                {uploadingCampaignAsset && <span className="profile-uploading">Enviando imagem...</span>}
+              </label>
+              <label>
+                Mapa principal
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => handleCampaignAssetUpload(event, "mapaPrincipal")}
+                />
+                {uploadingCampaignAsset && <span className="profile-uploading">Enviando mapa...</span>}
+              </label>
               <button type="submit" className="btn-save">Salvar alterações</button>
             </form>
           </div>

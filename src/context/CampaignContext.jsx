@@ -15,9 +15,13 @@ import {
 } from "firebase/firestore";
 import {
   createUserWithEmailAndPassword,
+  EmailAuthProvider,
   onAuthStateChanged,
+  reauthenticateWithCredential,
   signInWithEmailAndPassword,
   signOut,
+  updatePassword,
+  updateProfile,
 } from "firebase/auth";
 import { auth, db } from "../firebaseConfig.js";
 
@@ -71,14 +75,8 @@ const PERMISSION_MATRIX = {
 
 export function CampaignProvider({ children }) {
   const [campaigns, setCampaigns] = useState([]);
-  const [selectedCampaignId, setSelectedCampaignId] = useState(() => {
-    const storedValue = window.localStorage.getItem(STORAGE_CAMPAIGN_KEY);
-    return storedValue || "";
-  });
-  const [currentUserId, setCurrentUserId] = useState(() => {
-    const storedValue = window.localStorage.getItem(STORAGE_USER_KEY);
-    return storedValue || "local-user";
-  });
+  const [selectedCampaignId, setSelectedCampaignId] = useState("");
+  const [currentUserId, setCurrentUserId] = useState("");
   const [currentUserProfile, setCurrentUserProfile] = useState(null);
   const [currentCampaign, setCurrentCampaign] = useState(null);
   const [campaignMembership, setCampaignMembership] = useState(null);
@@ -111,16 +109,19 @@ export function CampaignProvider({ children }) {
       if (firebaseUser?.uid) {
         const uid = firebaseUser.uid;
         setCurrentUserId(uid);
-        await ensureProfileForUser(uid, {
-          nome: firebaseUser.displayName || firebaseUser.email?.split("@")[0] || "Usuário",
-          email: firebaseUser.email || "",
-          foto: firebaseUser.photoURL || "",
-        });
+        await ensureProfileForUser(firebaseUser);
       } else {
-        const storedValue = window.localStorage.getItem(STORAGE_USER_KEY);
-        if (storedValue) {
-          setCurrentUserId(storedValue);
-        }
+        setCurrentUserId("");
+        setCurrentUserProfile(null);
+        setAccessibleCampaignIds([]);
+        setPendingInvites([]);
+        setCampaignMembership(null);
+        setCurrentMember(null);
+        setCurrentRole("viewer");
+        setSelectedCampaignId("");
+        setCurrentCampaign(null);
+        window.localStorage.removeItem(STORAGE_CAMPAIGN_KEY);
+        window.localStorage.removeItem(STORAGE_USER_KEY);
       }
     });
 
@@ -180,18 +181,6 @@ export function CampaignProvider({ children }) {
   }, [currentUserId, campaigns]);
 
   useEffect(() => {
-    if (!currentUserId) {
-      return;
-    }
-
-    void ensureProfileForUser(currentUserId, {
-      nome: currentUserId,
-      email: currentUserId,
-      foto: "",
-    });
-  }, [currentUserId]);
-
-  useEffect(() => {
     if (!currentUserId || !currentCampaign?.id) {
       setCampaignMembership(null);
       setCurrentMember(null);
@@ -233,11 +222,11 @@ export function CampaignProvider({ children }) {
   }, [currentUserId]);
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_CAMPAIGN_KEY, selectedCampaignId || "");
-  }, [selectedCampaignId]);
-
-  useEffect(() => {
-    window.localStorage.setItem(STORAGE_USER_KEY, currentUserId || "");
+    if (currentUserId) {
+      window.localStorage.setItem(STORAGE_USER_KEY, currentUserId);
+    } else {
+      window.localStorage.removeItem(STORAGE_USER_KEY);
+    }
   }, [currentUserId]);
 
   const accessibleCampaigns = useMemo(() => {
@@ -267,46 +256,120 @@ export function CampaignProvider({ children }) {
     setCurrentRole("viewer");
   };
 
-  const ensureProfileForUser = async (userId, profile = {}) => {
-    const profileRef = doc(db, "users", userId);
+  const clearSessionState = () => {
+    clearSelection();
+    setCurrentUserId("");
+    setCurrentUserProfile(null);
+    setAccessibleCampaignIds([]);
+    setPendingInvites([]);
+    window.localStorage.removeItem(STORAGE_CAMPAIGN_KEY);
+    window.localStorage.removeItem(STORAGE_USER_KEY);
+  };
+
+  const ensureProfileForUser = async (userSource, profile = {}) => {
+    const safeProfile = userSource?.uid
+      ? {
+          uid: userSource.uid,
+          nome: userSource.displayName || userSource.email?.split("@")[0] || profile.nome || "Usuário",
+          email: userSource.email || profile.email || "",
+          foto: userSource.photoURL || profile.foto || profile.imagem || "",
+        }
+      : {
+          uid: profile.uid || userSource || "",
+          nome: profile.nome || profile.email?.split("@")[0] || "Usuário",
+          email: profile.email || "",
+          foto: profile.foto || profile.imagem || "",
+        };
+
+    const profileRef = doc(db, "users", safeProfile.uid);
     const profileSnapshot = await getDoc(profileRef);
 
     await setDoc(
       profileRef,
       {
-        uid: userId,
-        nome: profile.nome || "Usuário",
-        email: profile.email || "",
-        foto: profile.foto || profile.imagem || "",
+        uid: safeProfile.uid,
+        nome: safeProfile.nome,
+        email: safeProfile.email,
+        foto: safeProfile.foto || "",
         createdAt: profileSnapshot.exists() ? profileSnapshot.data().createdAt || serverTimestamp() : serverTimestamp(),
       },
       { merge: true }
     );
   };
 
+  const updateCurrentUserProfile = async ({ nome, foto }) => {
+    if (!currentUserId) {
+      throw new Error("Você precisa estar autenticado para alterar o perfil.");
+    }
+
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error("Sessão de usuário não encontrada.");
+    }
+
+    const nextName = (nome || user.displayName || "Usuário").trim();
+    const nextPhoto = (foto || user.photoURL || "").trim();
+
+    await updateProfile(user, {
+      displayName: nextName,
+      photoURL: nextPhoto,
+    });
+
+    const profileRef = doc(db, "users", currentUserId);
+    await updateDoc(profileRef, {
+      nome: nextName,
+      foto: nextPhoto,
+      email: user.email || "",
+      updatedAt: serverTimestamp(),
+    });
+
+    const nextProfile = {
+      ...(currentUserProfile || {}),
+      nome: nextName,
+      foto: nextPhoto,
+      email: user.email || "",
+      uid: currentUserId,
+    };
+
+    setCurrentUserProfile(nextProfile);
+    return nextProfile;
+  };
+
+  const updateUserPassword = async ({ currentPassword, newPassword }) => {
+    const user = auth.currentUser;
+    if (!user || !user.email) {
+      throw new Error("Você precisa estar autenticado para alterar a senha.");
+    }
+
+    if (!currentPassword?.trim() || !newPassword?.trim()) {
+      throw new Error("Preencha a senha atual e a nova senha.");
+    }
+
+    const credential = EmailAuthProvider.credential(user.email, currentPassword.trim());
+    await reauthenticateWithCredential(user, credential);
+    await updatePassword(user, newPassword.trim());
+  };
+
   const signUp = async (email, password, nome) => {
     const credential = await createUserWithEmailAndPassword(auth, email, password);
-    await ensureProfileForUser(credential.user.uid, {
-      nome: nome.trim() || credential.user.email?.split("@")[0] || "Usuário",
-      email: credential.user.email || email,
-      foto: credential.user.photoURL || "",
+    const normalizedName = (nome || credential.user.email?.split("@")[0] || "Usuário").trim();
+
+    await updateProfile(credential.user, {
+      displayName: normalizedName,
+      photoURL: credential.user.photoURL || "",
     });
+
     return credential.user;
   };
 
   const signIn = async (email, password) => {
     const credential = await signInWithEmailAndPassword(auth, email, password);
-    await ensureProfileForUser(credential.user.uid, {
-      nome: credential.user.displayName || credential.user.email?.split("@")[0] || "Usuário",
-      email: credential.user.email || email,
-      foto: credential.user.photoURL || "",
-    });
     return credential.user;
   };
 
   const signOutUser = async () => {
     await signOut(auth);
-    clearSelection();
+    clearSessionState();
   };
 
   const inviteMember = async (email, role) => {
@@ -328,6 +391,17 @@ export function CampaignProvider({ children }) {
 
     const profileDoc = profileSnapshot.docs[0];
     const invitedUserId = profileDoc.data().uid || profileDoc.id;
+
+    const membershipQuery = query(
+      collection(db, "campaignMembers"),
+      where("campaignId", "==", currentCampaign.id),
+      where("userId", "==", invitedUserId)
+    );
+    const membershipSnapshot = await getDocs(membershipQuery);
+
+    if (!membershipSnapshot.empty) {
+      return { ok: false, reason: "already_member" };
+    }
 
     const pendingInviteQuery = query(
       collection(db, "campaignInvites"),
@@ -418,8 +492,20 @@ export function CampaignProvider({ children }) {
   };
 
   const deleteCampaign = async (campaignId = currentCampaign?.id) => {
-    if (!campaignId) {
-      return;
+    if (!campaignId || !currentUserId) {
+      return false;
+    }
+
+    const campaignRef = doc(db, "campaigns", campaignId);
+    const campaignSnapshot = await getDoc(campaignRef);
+
+    if (!campaignSnapshot.exists()) {
+      return false;
+    }
+
+    const campaignData = campaignSnapshot.data();
+    if (campaignData.ownerId !== currentUserId) {
+      return false;
     }
 
     const membersQuery = query(collection(db, "campaignMembers"), where("campaignId", "==", campaignId));
@@ -435,14 +521,20 @@ export function CampaignProvider({ children }) {
       inviteSnapshot.docs.map((inviteDoc) => deleteDoc(doc(db, "campaignInvites", inviteDoc.id)))
     );
 
-    await deleteDoc(doc(db, "campaigns", campaignId));
+    await deleteDoc(campaignRef);
 
     if (selectedCampaignId === campaignId) {
       clearSelection();
     }
+
+    return true;
   };
 
   const createCampaign = async (campaignData) => {
+    if (!currentUserId) {
+      return null;
+    }
+
     const campaignRef = await addDoc(collection(db, "campaigns"), {
       ...campaignData,
       ownerId: currentUserId,
@@ -455,20 +547,11 @@ export function CampaignProvider({ children }) {
       role: "owner",
     });
 
-    await ensureProfileForUser(currentUserId, {
-      nome: currentUserId,
-      email: currentUserId,
-      imagem: "",
-    });
-
-    const createdCampaign = {
+    return {
       id: campaignRef.id,
       ...campaignData,
       ownerId: currentUserId,
     };
-
-    selectCampaign(createdCampaign);
-    return createdCampaign;
   };
 
   const value = {
@@ -495,6 +578,9 @@ export function CampaignProvider({ children }) {
     signUp,
     signIn,
     signOutUser,
+    clearSessionState,
+    updateCurrentUserProfile,
+    updateUserPassword,
   };
 
   return <CampaignContext.Provider value={value}>{children}</CampaignContext.Provider>;

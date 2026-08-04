@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCampaign } from "../context/CampaignContext.jsx";
+import { uploadImage } from "../services/cloudinary.js";
+import "../assets/campaigns.css";
 
 function CampaignSelection() {
   const navigate = useNavigate();
   const {
     currentUserId,
     currentUserProfile,
-    setCurrentUserId,
     accessibleCampaigns,
     selectCampaign,
     createCampaign,
@@ -25,6 +26,9 @@ function CampaignSelection() {
   const [showInvitesModal, setShowInvitesModal] = useState(false);
   const [inviteDetails, setInviteDetails] = useState([]);
   const [authForm, setAuthForm] = useState({ nome: "", email: "", password: "" });
+  const [authError, setAuthError] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
+  const [uploadingCampaignAsset, setUploadingCampaignAsset] = useState(false);
   const [newCampaign, setNewCampaign] = useState({
     nome: "",
     descricao: "",
@@ -32,9 +36,11 @@ function CampaignSelection() {
     mapaPrincipal: "",
   });
 
+  const isAuthenticated = Boolean(currentUserId);
+
   const userInfoLabel = useMemo(() => {
-    return currentUserProfile?.nome || currentUserId || "local-user";
-  }, [currentUserId, currentUserProfile]);
+    return currentUserProfile?.nome || currentUserProfile?.email || "Usuário";
+  }, [currentUserProfile]);
 
   useEffect(() => {
     if (!pendingInvites.length) {
@@ -63,11 +69,39 @@ function CampaignSelection() {
       return;
     }
 
-    await deleteCampaign(campaign.id);
+    const removed = await deleteCampaign(campaign.id);
+    if (!removed) {
+      setAuthError("Apenas o proprietário pode excluir esta campanha.");
+    }
+  };
+
+  const handleCampaignAssetUpload = async (event, fieldName) => {
+    const file = event.target.files?.[0];
+    if (!file) {
+      return;
+    }
+
+    try {
+      setUploadingCampaignAsset(true);
+      const url = await uploadImage(file);
+      setNewCampaign((current) => ({ ...current, [fieldName]: url }));
+    } catch (error) {
+      setAuthError(error?.message || "Não foi possível enviar o arquivo da campanha.");
+    } finally {
+      setUploadingCampaignAsset(false);
+    }
   };
 
   const handleCreateCampaign = async (event) => {
     event.preventDefault();
+
+    if (!currentUserId) {
+      setShowCreateModal(false);
+      setShowAuthModal(true);
+      setAuthMode("login");
+      setAuthError("Faça login para criar campanhas.");
+      return;
+    }
 
     await createCampaign({
       nome: newCampaign.nome.trim(),
@@ -87,15 +121,46 @@ function CampaignSelection() {
 
   const handleAuthSubmit = async (event) => {
     event.preventDefault();
+    setAuthError("");
 
-    if (authMode === "register") {
-      await signUp(authForm.email, authForm.password, authForm.nome);
-    } else {
-      await signIn(authForm.email, authForm.password);
+    if (!authForm.email.trim() || !authForm.password.trim()) {
+      setAuthError("Preencha e-mail e senha para continuar.");
+      return;
     }
 
-    setShowAuthModal(false);
-    setAuthForm({ nome: "", email: "", password: "" });
+    setAuthLoading(true);
+
+    try {
+      if (authMode === "register") {
+        await signUp(authForm.email.trim(), authForm.password, authForm.nome.trim());
+      } else {
+        await signIn(authForm.email.trim(), authForm.password);
+      }
+
+      setShowAuthModal(false);
+      setAuthForm({ nome: "", email: "", password: "" });
+    } catch (error) {
+      const code = error?.code || "";
+      if (code === "auth/invalid-email") {
+        setAuthError("Digite um endereço de e-mail válido.");
+      } else if (code === "auth/user-not-found") {
+        setAuthError("Nenhuma conta foi encontrada com este e-mail.");
+      } else if (code === "auth/wrong-password") {
+        setAuthError("E-mail ou senha incorretos.");
+      } else if (code === "auth/too-many-requests") {
+        setAuthError("Muitas tentativas de login. Tente novamente mais tarde.");
+      } else if (code === "auth/email-already-in-use") {
+        setAuthError("Este e-mail já está cadastrado.");
+      } else if (code === "auth/weak-password") {
+        setAuthError("A senha deve possuir pelo menos 6 caracteres.");
+      } else {
+        setAuthError(authMode === "register"
+          ? "Não foi possível criar a conta. Tente novamente."
+          : "Não foi possível entrar na conta. Tente novamente.");
+      }
+    } finally {
+      setAuthLoading(false);
+    }
   };
 
   const handleAcceptInvite = async (inviteId) => {
@@ -108,63 +173,72 @@ function CampaignSelection() {
     setShowInvitesModal(false);
   };
 
+  const handleSignOut = async () => {
+    await signOutUser();
+    navigate("/");
+  };
+
   return (
-    <div className="page-container">
-      <section className="hero-section">
+    <div className="campaigns-page">
+      <section className="campaigns-hero">
         <h1>Escolha sua campanha</h1>
         <p>Antes de entrar no Codex, selecione uma campanha da qual você faz parte.</p>
 
-        <div className="filter-inputs-char" style={{ marginTop: 16 }}>
-          <label>
-            Usuário atual
-            <input
-              value={currentUserId}
-              onChange={(event) => setCurrentUserId(event.target.value || "local-user")}
-              className="search-input-char"
-              placeholder="Digite seu uid"
-            />
-          </label>
-        </div>
+        <div className="campaigns-toolbar" style={{ marginTop: 20 }}>
+          {isAuthenticated ? (
+            <div className="campaigns-identity">
+              Usuário autenticado · {userInfoLabel}
+            </div>
+          ) : null}
 
-        <div className="action-buttons-row" style={{ marginTop: 12 }}>
-          <button className="btn-add-main" onClick={() => setShowAuthModal(true)}>
-            Entrar com conta
-          </button>
-          <button className="btn-add-main" onClick={() => setShowCreateModal(true)}>
-            + Nova campanha
-          </button>
-          {currentUserId && currentUserId !== "local-user" && (
-            <button className="btn-delete" onClick={signOutUser}>
-              Sair
-            </button>
-          )}
+          <div className="campaigns-actions-wrap">
+            {!isAuthenticated && (
+              <button className="btn-add-main" onClick={() => setShowAuthModal(true)}>
+                Entrar com conta
+              </button>
+            )}
+            {isAuthenticated && (
+              <button className="btn-add-main" onClick={() => setShowCreateModal(true)}>
+                + Nova campanha
+              </button>
+            )}
+            {isAuthenticated && (
+              <button className="btn-delete" onClick={handleSignOut}>
+                Sair
+              </button>
+            )}
+          </div>
         </div>
       </section>
 
-      <section className="home-dashboard">
-        <div className="dashboard-left">
+      <section className="campaigns-board">
+        <div className="campaigns-title-row">
           <h2>Campanhas disponíveis para {userInfoLabel}</h2>
+        </div>
 
-          {accessibleCampaigns.length === 0 ? (
-            <p className="empty-state">Nenhuma campanha vinculada a este usuário foi encontrada.</p>
-          ) : (
-            <div className="characters-grid">
-              {accessibleCampaigns.map((campaign) => (
-                <div key={campaign.id} className="character-card">
-                  {campaign.imagem && (
-                    <img src={campaign.imagem} alt={campaign.nome} className="mission-detail-image" />
-                  )}
-                  <div className="featured-card-info">
-                    <h3>{campaign.nome}</h3>
-                    <p className="description">{campaign.descricao || "Sem descrição."}</p>
-                    <div className="action-buttons-row" style={{ marginTop: 12 }}>
-                      <button
-                        type="button"
-                        className="btn-save"
-                        onClick={() => handleChooseCampaign(campaign)}
-                      >
-                        Entrar na campanha
-                      </button>
+        {authError && <p className="campaigns-empty">{authError}</p>}
+
+        {accessibleCampaigns.length === 0 ? (
+          <p className="campaigns-empty">Nenhuma campanha vinculada a este usuário foi encontrada.</p>
+        ) : (
+          <div className="campaigns-grid">
+            {accessibleCampaigns.map((campaign) => (
+              <article key={campaign.id} className="campaign-card">
+                {campaign.imagem && (
+                  <img src={campaign.imagem} alt={campaign.nome} className="campaign-card-media" />
+                )}
+                <div className="campaign-card-content">
+                  <h3>{campaign.nome}</h3>
+                  <p className="campaign-card-description">{campaign.descricao || "Sem descrição."}</p>
+                  <div className="campaigns-card-actions">
+                    <button
+                      type="button"
+                      className="btn-save"
+                      onClick={() => handleChooseCampaign(campaign)}
+                    >
+                      Entrar na campanha
+                    </button>
+                    {campaign.ownerId === currentUserId && (
                       <button
                         type="button"
                         className="btn-delete"
@@ -172,13 +246,13 @@ function CampaignSelection() {
                       >
                         Excluir campanha
                       </button>
-                    </div>
+                    )}
                   </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
 
       {showAuthModal && (
@@ -211,14 +285,19 @@ function CampaignSelection() {
                 onChange={(event) => setAuthForm({ ...authForm, password: event.target.value })}
                 required
               />
+              {authError && <p className="empty-state">{authError}</p>}
               <div className="action-buttons-row">
-                <button type="submit" className="btn-save">
-                  {authMode === "register" ? "Criar conta" : "Entrar"}
+                <button type="submit" className="btn-save" disabled={authLoading}>
+                  {authLoading ? "Processando..." : authMode === "register" ? "Criar conta" : "Entrar"}
                 </button>
                 <button
                   type="button"
                   className="btn-add-main"
-                  onClick={() => setAuthMode(authMode === "register" ? "login" : "register")}
+                  onClick={() => {
+                    setAuthError("");
+                    setAuthMode(authMode === "register" ? "login" : "register");
+                  }}
+                  disabled={authLoading}
                 >
                   {authMode === "register" ? "Já tenho conta" : "Quero me cadastrar"}
                 </button>
@@ -278,16 +357,24 @@ function CampaignSelection() {
                 onChange={(event) => setNewCampaign({ ...newCampaign, descricao: event.target.value })}
                 required
               />
-              <input
-                placeholder="Imagem de capa"
-                value={newCampaign.imagem}
-                onChange={(event) => setNewCampaign({ ...newCampaign, imagem: event.target.value })}
-              />
-              <input
-                placeholder="Mapa principal"
-                value={newCampaign.mapaPrincipal}
-                onChange={(event) => setNewCampaign({ ...newCampaign, mapaPrincipal: event.target.value })}
-              />
+              <label>
+                Imagem de capa
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => handleCampaignAssetUpload(event, "imagem")}
+                />
+                {uploadingCampaignAsset && <span className="profile-uploading">Enviando imagem...</span>}
+              </label>
+              <label>
+                Mapa principal
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) => handleCampaignAssetUpload(event, "mapaPrincipal")}
+                />
+                {uploadingCampaignAsset && <span className="profile-uploading">Enviando mapa...</span>}
+              </label>
               <button type="submit" className="btn-save">
                 Criar campanha
               </button>

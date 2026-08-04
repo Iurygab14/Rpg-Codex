@@ -176,8 +176,8 @@ function WorldMap() {
         >
           <img
             className="worldmap-image"
-            src="/imgs/world-map.jpg"
-            alt="Mapa do Mundo"
+            src={currentCampaign?.mapaPrincipal || "/imgs/world-map.jpg"}
+            alt={currentCampaign?.nome ? `Mapa principal de ${currentCampaign.nome}` : "Mapa do Mundo"}
           />
 
           <div className="map-overlay">

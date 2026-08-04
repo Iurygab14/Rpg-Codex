@@ -13,11 +13,12 @@ import MissionDetails from "./pages/MissionDetails.jsx";
 import Navbar from "./components/navbar.jsx";
 import CampaignSelection from "./pages/CampaignSelection.jsx";
 import CampaignDetails from "./pages/CampaignDetails.jsx";
+import Profile from "./pages/Profile.jsx";
 import AccessDenied from "./pages/AccessDenied.jsx";
 import { useCampaign } from "./context/CampaignContext.jsx";
 
 function App() {
-  const { currentCampaign, campaignMembership } = useCampaign();
+  const { currentCampaign, campaignMembership, currentUserId } = useCampaign();
 
   const hasCampaignAccess = Boolean(currentCampaign && campaignMembership);
 
@@ -48,6 +49,7 @@ function App() {
           <Route path="/bestiary" element={hasCampaignAccess ? <Bestiary /> : <Navigate to="/" replace />} />
           <Route path="/worldmap" element={hasCampaignAccess ? <WorldMap /> : <Navigate to="/" replace />} />
           <Route path="/campaigns/:id" element={hasCampaignAccess ? <CampaignDetails /> : <Navigate to="/" replace />} />
+          <Route path="/profile" element={currentUserId ? <Profile /> : <Navigate to="/" replace />} />
           <Route path="/denied" element={<AccessDenied />} />
         </Routes>
       </main>
